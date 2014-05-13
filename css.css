@@ -1,0 +1,211 @@
+@charset "utf-8";	/* CSS Document */
+
+/* General Rules */
+
+body 
+{
+	color:#2a2a2a;
+	text-align:left;
+	font-family:arial;
+	font-size:14px;
+}
+
+a:link
+{
+	color:#2a2a2a;
+}
+
+a:visited
+{
+	color:#2a2a2a;
+}
+
+a:hover
+{
+	color:#555555;
+}
+
+a:active
+{
+	color:#2a2a2a;
+}
+
+strong
+{
+	font-weight:bold;
+}
+
+em
+{
+	font-style:italic;
+}
+
+h1
+{
+	font-weight:bold;
+	font-size:24px;
+	text-align:left;
+	padding: 0px 0px;
+}
+
+h2
+{
+	font-weight:bold;
+	font-size:18px;
+	text-align:left;
+	padding: 12px 8px;
+}
+
+footer
+{
+	width: 100%;
+	bottom: 0;
+	position: fixed;
+}
+header
+{
+	font-weight:bold;
+	font-size:34px;
+	text-align:center;
+	padding: 15px 0px 25px 0px;
+}
+
+ul
+{
+	padding: 3px 15px;
+}
+
+li
+{
+	list-style-type:disc;
+	padding: 3px 15px;
+	font-size:12px;
+}
+
+p
+{
+	padding: 5px 0px;
+}
+
+input,textarea
+{
+	border:0px;
+	border-bottom:1px solid #aaaaaa;
+	font-size:12px;
+	color: #777777;
+}
+td
+{
+	padding: 2px;
+}
+
+/* Classes */
+
+div.body
+{
+	padding:0px 25px 35px 25px;
+}
+div.messages
+{
+	text-align:center;
+	font-size:16px;
+	top:0;
+	left:0;
+	z-index:2;
+	width:100%;
+	position: absolute;
+}
+div.errorM
+{
+	border-bottom:1px solid #9C3838;
+	background-color: #FFB0B1;
+	padding:2px;
+}
+div.resultM
+{
+	border-bottom:1px solid #449C38;
+	background-color: #B0FFBA;
+	padding:2px;
+}
+div.footLinks
+{
+	border-top:1px solid #dddddd;
+	background-color: #b0b0b0;
+	padding: 5px;
+	text-align:center;
+	font-size:16px;
+}
+div.searchResults
+{
+	border-bottom:1px solid #ffffff;
+	background-color: #EDEDED;
+	padding: 5px;
+	text-align:left;
+	font-size:14px;
+}
+div.searchResultsDO
+{
+	border-bottom:1px solid #ffffff;
+	background-color: #FCD9F3;
+	padding: 5px;
+	text-align:left;
+	font-size:14px;
+}
+div.ticketLink
+{
+	font-size:36px;
+	float:left;
+	width:180px;
+}
+div.searchInfo
+{
+	margin-left:190px;
+}
+div.name
+{
+	width:200px;
+	float:left;
+	font-size:20px;
+}
+div.auxInfo
+{
+	margin-left:210px;
+	font-size:16px;
+}
+div.terms
+{
+	padding:10px 15px;
+}
+div.section1
+{
+	padding:10px 15px;
+}
+div.section2
+{
+	padding:10px 15px;
+}
+div.section3
+{
+	padding:10px 15px;
+}
+div.action
+{
+	padding:10px 15px;
+}
+div.subhead
+{
+	font-weight:bold;
+	font-size:20px;
+	text-align:left;
+	padding: 0px 8px;
+	margin: 6px 0px 12px 0px;
+	border-bottom:1px solid #000000;
+}
+td.input
+{
+	width:150px;
+}
+td.text
+{
+	padding: 5px 2px;
+}
