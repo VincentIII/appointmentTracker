@@ -141,39 +141,7 @@
 		}
 		echo "</div>";
 	}
-	
-	//Makes the drop-down form selection boxes for the Search Form
-	function generateDropDowns($type)	
-	{
-		global $connection;
-		if ($type == "consultantDropOff" || $type == "consultantPickUp" || $type = "consultant")
-		{
-			$query = "SELECT consultantUserName AS code, CONCAT_WS(', ', consultantLastName, consultantFirstName) AS name FROM consultants WHERE consultantActive = 1 ORDER BY consultantLastName ASC ";
-		}
-		else{}
-		
-		$dropDownExport = "<select name='$type'>\n<option value='IGNORE'>All</option>\n";
-		if ($stmtDD = $connection->prepare($query))
-		{
-			$stmtDD ->execute();
-			$stmtDD ->store_result();
-			$stmtDD ->bind_result($code,$name);
-			while ($stmtDD ->fetch())
-			{
-				if (!empty($_POST[$type]) && $code == $_POST[$type])
-				{
-					$dropDownExport .= "<option value='$code' selected>$name</option>\n";
-				}
-				else
-				{
-					$dropDownExport .= "<option value='$code'>$name</option>\n";
-				}
-			}
-		}
-		$dropDownExport .= "</select>\n";
-		return $dropDownExport;
-	}	
-	
+
 	//Looks up to see if there is already a previous sheet with a ticket number and creates a instanceID
 	function determineInstance()
 	{
@@ -190,6 +158,36 @@
 				$instanceID = $newInstance;
 			}
 		}
+	}
+	
+	function validateStaff($userPass)
+	{
+		global $connection;
+		$result = "No Match";
+		$cost = 10;
+		$salt = strtr(base64_encode(mcrypt_create_iv(16,MCRYPT_DEV_URANDOM)),'+','.');
+		$salt = sprintf("$2a$%02d$",$cost).$salt;
+		$hash = crypt($userPass,$salt);
+		echo $hash;
+		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode FROM consultants "))
+		{	
+			$stmt->bind_param("s",$hash);
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($staffUserName,$passHash);
+			while ($stmt->fetch())
+			{
+				if (crypt($userPass,$pashHash) === $pashHash)
+				{
+					$result = $staffUserName;
+				}
+			}
+		}
+		else
+		{
+			$result = "No Match";
+		}
+		return $result;
 	}
 	//Displays legal info above form
 	function displayLegal()
@@ -216,25 +214,10 @@
 		<div class='section1'>
 			<div class='subhead'>Drop Off</div>
 			<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstName' value='First'  onfocus='clearThis(this)'></td><td class='input'><input type='text' name='customerLastName' value='Last' onfocus='clearThis(this)'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerDropOff'></td></tr>
-			<tr><td class='input'>Consultant: </td><td class='input'>";
-		echo generateDropDowns("consultantDropOff");
-		echo"</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffDropOff'></td></tr>
+			<tr><td class='input'>Consultant: </td><td class='input'><input type='password' name='consultantDropOff'></td><td class='input'></td><td class='input'>Staff: </td><td class='input'><input type='password' name='staffDropOff'></td></tr>
 			<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
-			<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='altFirstName' value='First' onfocus='clearThis(this)'></td><td class='input'><input type='text' name='altLastName' value='Last' onfocus='clearThis(this)'></td><td>Username:</td><td class='input'><input type='text' name='altUserName'></td></tr></table>
-		</div>";
-			//Optional Boolean will re-add Section 2(Pick-Up) to New Forms
-		if ($displayPickUp)
-		{
-			echo"<div class='section2'>
-				<div class='subhead'>Pick Up</div>
-				<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
-				<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstNamePickUp' value='First' onfocus='clearThis(this)'></td><td class='input'><input type='text' name='customerLastNamePickUp' value='Last' onfocus='clearThis(this)'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerPickUp'></td></tr>
-				<tr><td class='input'>Consultant: </td><td class='input'>";
-			echo generateDropDowns("consultantPickUp");
-			echo" </td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffPickUp'></td></tr></table>
-			</div>";
-		}
-		echo "<div class='section3'>
+			<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='altFirstName' value='First' onfocus='clearThis(this)'></td><td class='input'><input type='text' name='altLastName' value='Last' onfocus='clearThis(this)'></td><td>Username:</td><td class='input'><input type='text' name='altUserName'></td></tr></table></div>
+			<div class='section3'>
 			<div class='subhead'>Departmental Information</div>
 			<table><tr><td class='input'>Username: </td><td><input type='text' name='customerUserName'></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' name='ticketNo'></td></tr>
 			<tr><td class='input'>Computer: </td><td class='input'><input type='text' name='computerMake' value='Make' onfocus='clearThis(this)'></td><td class='input'><input type='text' name='computerModel' value='Model' onfocus='clearThis(this)'></td><td class='input'>Serial Number: </td><td class='input'><input type='text' name='computerSerialNum'></td></tr></table><br/>
@@ -265,6 +248,16 @@
 		{
 			$messages .= "ERROR:Please have all required info in 'Drop Off'::";
 			$break = TRUE;
+		}
+		else
+		{
+			$consultantDropOff = validateStaff($_POST['consultantDropOff']);
+			//$staffDropOff = validateStaff($_POST['staffDropOff']);
+			if ($consultantDropOff == "No Match" || $staffDropOff == "No Match")
+			{
+				$messages .= "ERROR:Please enter the correct password in consultant and staff fields::";
+				$break = TRUE;
+			}
 		}
 			// Verifies all of required Departmental Information is filled out
 		if (isNullOrEmptyString($_POST["customerUserName"]) || isNullOrEmptyString($_POST["ticketNo"]) || isNullOrEmptyString($_POST["computerMake"]) || $_POST["computerMake"] == "Make" || $_POST["computerModel"] == "Model" || isNullOrEmptyString($_POST["computerModel"]) || isNullOrEmptyString($_POST["computerSerialNum"]))
@@ -302,7 +295,7 @@
 			$query = "INSERT INTO sheets (ticketNo,instanceID,customerFirstName,customerLastName,customerDropOff,dateDropOff,consultantDropOff,staffDropOff,customerUserName,computerMake,computerModel,computerSerialNum,powerCableQuantity,powerCableDesc,mediaQuantity,mediaDesc,otherQuantity,otherDesc,warrantyStatus,cssdDriveOut,altUserName,altFirstName,altLastName,topCondition,bottomCondition,screenCondition,keyboardCondition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			$bindString = "iissssssssssisisisiisssssss";
 			$stmt = $connection->prepare($query);
-			$stmt->bind_param($bindString,$_POST['ticketNo'],$instanceID,$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$_POST['consultantDropOff'],$_POST['staffDropOff'],$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition']);
+			$stmt->bind_param($bindString,$_POST['ticketNo'],$instanceID,$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$consultantDropOff,$staffDropOff,$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition']);
 			$stmt->execute();
 			$stmt->store_result();
 		}
@@ -342,9 +335,8 @@
 				<div class='section1'>
 					<div class='subhead'>Drop Off</div>
 					<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstName' value='$customerFirstName'></td><td class='input'><input type='text' name='customerLastName' value='$customerLastName'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerDropOff'  value='$customerDropOff'></td></tr>
-					<tr><td class='input'>Consultant: </td><td class='input'>";
-				echo generateDropDowns("consultantDropOff");
-				echo"</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffDropOff'  value='$staffDropOff'></td></tr>
+					<tr><td class='input'>Consultant: </td><td class='input'>
+				</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffDropOff'  value='$staffDropOff'></td></tr>
 					<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
 					<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' disabled><input type='hidden' name='altFirstName'  value='$altFirstName'></td><td class='input'><input type='text' value='$altLastName' disabled><input type='hidden' name='altLastName' value='$altLastName'></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' disabled><input type='hidden' name='altUserName' value='$altUserName'></td></tr></table>
 				</div>
@@ -352,9 +344,7 @@
 					<div class='subhead'>Pick Up</div>
 					<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
 					<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstNamePickUp' value='$customerFirstNamePickUp'></td><td class='input'><input type='text' name='customerLastNamePickUp' value='$customerLastNamePickUp'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerPickUp' value='$customerPickUp'></td></tr>
-					<tr><td class='input'>Consultant: </td><td class='input'>";
-				echo generateDropDowns("consultantPickUp");
-				echo" </td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffPickUp' value='$staffPickUp'></td></tr></table>
+					<tr><td class='input'>Consultant: </td><td class='input'></td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffPickUp' value='$staffPickUp'></td></tr></table>
 				</div>
 				<div class='section3'>
 					<div class='subhead'>Departmental Information</div>
