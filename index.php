@@ -5,10 +5,6 @@
 	//	created by: 	Vincent Agresti
 	//	program name:	Check-In Program
 	//	short summary:	Program allows for documentation of checked in PCs and checking out PCs in TechRow
-	//	changelog:		05/05/2014: Basic Form Created, Framework for Inserts Built
-	//					05/06/2014: All basic commands functional, Framework for Navigation and JQuery Built
-	//					05/07/2014:	Search and JQuery functional, CSS implemented
-	//					05/12/2014: All functions implemented using OO Prepared Statements MySQLi
 	//
 	// GLOBALS-----------------------------------------------------------------------------
 	$connection = new mysqli("localhost","root","","checkout");
@@ -18,7 +14,7 @@
 	}
 	$messages = "";
 	$break = FALSE;
-	$instanceID = NULL;
+	$instanceID = "";
 	
 		//Used for Daylight Saving Time Adjustments
 	if (date("I", time()) == TRUE)
@@ -183,9 +179,8 @@
 	{
 		global $connection;
 		global $instanceID;
-		$noResults = TRUE;
 		if ($stmt = $connection->prepare("SELECT COUNT(instanceID) as newInstance FROM sheets WHERE ticketNo = ?"))
-		{
+		{	
 			$stmt->bind_param("i",$_POST['ticketNo']);
 			$stmt->execute();
 			$stmt->store_result();
@@ -193,7 +188,6 @@
 			while ($stmt->fetch())
 			{
 				$instanceID = $newInstance;
-				$noResults = FALSE;
 			}
 		}
 	}
@@ -305,11 +299,12 @@
 					$_POST[$key] = NULL;
 				}
 			}
-			$query = "INSERT INTO sheets (ticketNo,customerFirstName,customerLastName,customerDropOff,dateDropOff,consultantDropOff,staffDropOff,customerUserName,computerMake,computerModel,computerSerialNum,powerCableQuantity,powerCableDesc,mediaQuantity,mediaDesc,otherQuantity,otherDesc,warrantyStatus,cssdDriveOut,altUserName,altFirstName,altLastName,topCondition,bottomCondition,screenCondition,keyboardCondition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-			$bindString = "issssssssssisisisiisssssss";
+			$query = "INSERT INTO sheets (ticketNo,instanceID,customerFirstName,customerLastName,customerDropOff,dateDropOff,consultantDropOff,staffDropOff,customerUserName,computerMake,computerModel,computerSerialNum,powerCableQuantity,powerCableDesc,mediaQuantity,mediaDesc,otherQuantity,otherDesc,warrantyStatus,cssdDriveOut,altUserName,altFirstName,altLastName,topCondition,bottomCondition,screenCondition,keyboardCondition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			$bindString = "iissssssssssisisisiisssssss";
 			$stmt = $connection->prepare($query);
-			$stmt->bind_param($bindString,$_POST['ticketNo'],$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$_POST['consultantDropOff'],$_POST['staffDropOff'],$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition']);
+			$stmt->bind_param($bindString,$_POST['ticketNo'],$instanceID,$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$_POST['consultantDropOff'],$_POST['staffDropOff'],$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition']);
 			$stmt->execute();
+			$stmt->store_result();
 		}
 	}
 	
@@ -425,11 +420,15 @@
 			// If not ready for Pick-Up, does not allow for pick-up date to be filled
 		if (isNullOrEmptyString($_POST["customerFirstNamePickUp"]) || isNullOrEmptyString($_POST["customerLastNamePickUp"]) || isNullOrEmptyString($_POST["customerPickUp"]) || $_POST["consultantPickUp"] == "IGNORE" || isNullOrEmptyString($_POST["staffPickUp"]))
 		{
+			if ($_POST["consultantPickUp"] == "IGNORE")
+			{
+				$_POST["consultantPickUp"] = NULL;
+			}
 			$rightNow = NULL;
 		}
 		if ($break == FALSE)
 		{
-			determineInstance();
+			
 			//Removes all code/tags/inject characters from input.  If empty, sets to NULL
 			foreach($_POST as $key=>$value)
 			{
@@ -443,7 +442,6 @@
 			$bindString = "ssssssssssisisisiissssssssssssii";
 			$stmt = $connection->prepare($query);
 			$stmt->bind_param($bindString,$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$_POST['consultantDropOff'],$_POST['staffDropOff'],$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition'],$_POST['customerFirstNamePickUp'],$_POST['customerLastNamePickUp'],$_POST['customerPickUp'],$_POST['consultantPickUp'],$_POST['staffPickUp'],$_POST['ticketNo'],$instanceID);
-			echo $_POST['ticketNo'];
 			$stmt->execute();
 			$stmt->store_result();
 		}
