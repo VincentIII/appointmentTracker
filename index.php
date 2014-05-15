@@ -80,6 +80,31 @@
 					<div class='body'>\n";
 	}
 	
+	//Makes the drop-down form selection boxes for the Search Form
+	function generateDropDowns($type)	
+	{
+		global $connection;
+		if ($type = "consultant")
+		{
+			$query = "SELECT consultantUserName AS code, CONCAT_WS(', ', consultantLastName, consultantFirstName) AS name FROM consultants WHERE consultantActive = 1 ORDER BY consultantLastName ASC ";
+		}
+		else{}
+		
+		$dropDownExport = "<select name='$type'>";
+		if ($stmtDD = $connection->prepare($query))
+		{
+			$stmtDD ->execute();
+			$stmtDD ->store_result();
+			$stmtDD ->bind_result($code,$name);
+			while ($stmtDD ->fetch())
+			{
+				$dropDownExport .= "<option value='$code'>$name</option>\n";
+			}
+		}
+		$dropDownExport .= "</select>\n";
+		return $dropDownExport;
+	}	
+	
 	//Displays HTML Footer
 	function displayFooter()				
 	{
@@ -108,6 +133,7 @@
 	}
 	
 	//Displays Success & Error Messages\
+	//Takes a the string $messages and breaks it down into individual messages.  Not an array but instead a single string
 	function displayMessages()
 	{
 		global $messages;
@@ -115,7 +141,7 @@
 		$continue = TRUE;
 		while ($continue == TRUE)
 		{
-			$end = strpos($messages, "::");
+			$end = strpos($messages, "::");	//If there is no more '::', the custom delimiter I'm using, it will say the message string has ended
 			if ($end === FALSE)
 			{
 				$continue = FALSE;
@@ -143,6 +169,8 @@
 	}
 
 	//Looks up to see if there is already a previous sheet with a ticket number and creates a instanceID
+	//Due to how the first instance of a ticket will have an ID of 0, the number pulled that match become the new instanceID
+	//EG: If ticket 1234421 has 2 sheets made in its name already, the new instanceID will be 2
 	function determineInstance()
 	{
 		global $connection;
@@ -160,6 +188,7 @@
 		}
 	}
 	
+	//Used to match the signature password to the correct staff member.  If no match, then it will return an error code of invalid signature
 	function validateStaff($userPass)
 	{
 		global $connection;
@@ -209,7 +238,6 @@
 	//Creates a blank check-in form
 	function displayForm()
 	{
-		$displayPickUp = FALSE;
 		echo"<form action='index.php' id='submitForm' method='post' autocomplete='off'>
 		<div class='section1'>
 			<div class='subhead'>Drop Off</div>
@@ -250,9 +278,10 @@
 			$break = TRUE;
 		}
 		else
-		{
+		{	
+			//If section is filled out, validate both signature passcodes
 			$consultantDropOff = validateStaff($_POST['consultantDropOff']);
-			//$staffDropOff = validateStaff($_POST['staffDropOff']);
+			$staffDropOff = validateStaff($_POST['staffDropOff']);
 			if ($consultantDropOff == "No Match" || $staffDropOff == "No Match")
 			{
 				$messages .= "ERROR:Please enter the correct password in consultant and staff fields::";
@@ -306,6 +335,7 @@
 	{
 		global $connection;
 		global $instanceID;
+			//If $instanceID is set from Post or Get variables, then use different query
 		if (isNullOrEmptyString($instanceID))
 		{
 			$query = "SELECT ticketNo,customerFirstName,customerLastName,customerFirstNamePickUp,customerLastNamePickUp,customerDropOff,customerPickUp,consultantDropOff,consultantPickUp,staffDropOff,staffPickUp,customerUserName,computerMake,computerModel,computerSerialNum,powerCableQuantity,powerCableDesc,mediaQuantity,mediaDesc,otherQuantity,otherDesc,warrantyStatus,cssdDriveOut,altUserName,altFirstName,altLastName,topCondition,bottomCondition,screenCondition,keyboardCondition FROM sheets WHERE ticketNo = ? AND instanceID = '0'";
@@ -443,6 +473,7 @@
 		global $messages;
 		global $connection;
 		global $instanceID;
+			//If $instanceID is set from Post or Get variables, then use different query
 		if (isNullOrEmptyString($instanceID))
 		{
 			if ($stmt = $connection->prepare("DELETE FROM sheets WHERE ticketNo=? AND instanceID='0'"))
@@ -584,6 +615,7 @@
 		echo "<div class='subhead'>Results</div>";
 		if ($stmt = $connection->prepare($query))
 		{
+			//Based on how many variables are used in search, bind the parameters correctly
 			if (count($usedVariables) == 6)
 			{
 				$stmt->bind_param($bindString,$usedVariables[0],$usedVariables[1],$usedVariables[2],$usedVariables[3],$usedVariables[4],$usedVariables[5]);
