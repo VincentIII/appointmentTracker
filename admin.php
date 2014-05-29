@@ -24,6 +24,24 @@
 		$rightNow = date('Y-m-d H:i:s', time()-18000);	//18000 seconds - 5 hours
 	}
 	
+		//Verify SESSIONs
+	if (!empty($_SESSION["USER"]))
+	{
+		$userName = $_SESSION["USER"];
+	}
+	else
+	{
+		$userName = "";
+	}
+	if (!empty($_SESSION["TYPE"]))
+	{
+		$userType = $_SESSION["TYPE"];
+	}
+	else
+	{
+		$userType = "";
+	}
+	
 		//Verify POSTs
 	if (!empty($_POST["action"]))
 	{
@@ -36,8 +54,9 @@
 		//Verify GETs
 	if (!empty($_GET["menu"]))
 	{
-		$fAction = $_GET["menu"];
+		$fAction =	$_GET["menu"];
 	}
+	$displayMain = FALSE;
 	
 	// FUNCTIONS---------------------------------------------------------------------------
 	//Display HTML Header
@@ -76,7 +95,7 @@
 		echo "</div>
 		<footer>
 			<div class='footLinks'>
-				<a href='index.php'>[home]</a> <a href='index.php?menu=create'>[create]</a> <a href='index.php?menu=search'>[search]</a> 
+				
 			</div>
 		</footer>
 			</body>
@@ -132,31 +151,6 @@
 		echo "</div>";
 	}
 	
-	//Used to validate staff passcodes against the database
-	function validateStaff($userpass)
-	{
-		global $connection;
-		$result = "No Match";
-		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode FROM consultants "))
-		{	
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($staffUserName,$passHash);
-			while ($stmt->fetch())
-			{
-				if (password_verify($userpass,$passHash))
-				{
-					$result = $staffUserName;
-				}
-			}
-		}
-		else
-		{
-			$result = "No Match";
-		}
-		return $result;
-	}
-	
 	//Makes the drop-down form selection boxes for the Search Form
 	function generateDropDowns($type)	
 	{
@@ -202,41 +196,85 @@
 		}
 	}
 	
-	function testPasscode()
+	function loginForm()
+	{
+		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'><table>
+		<tr><td class='input'>Username:</td><td class='input'><input type='text' name='username' onfocus='clearThis(this)'></td></tr>
+		<tr><td class='input'>Password:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr>
+		<tr><td class='input' colspan='2'><input type='submit' name='action' value='Login'/></td></tr></table></form>";
+	}
+	
+	function login()
 	{
 		global $connection;
-		if ($stmt = $connection->prepare("SELECT consultantPasscode FROM consultants WHERE consultantUserName = ?"))
-		{
-			$stmt->bind_param("s",$_POST["consultant"]);
+		$match = FALSE;
+		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode,consultantType FROM consultants WHERE consultantUserName = ?"))
+		{	
+			$stmt->bind_param("s",$_POST["username"]);
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($recievedPassword);
+			$stmt->bind_result($consultantUserName,$consultantPasscode,$consultantType);
 			while ($stmt->fetch())
 			{
-				if (password_verify($_POST["password"],$recievedPassword))
+				if (password_verify($_POST["password"],$consultantPasscode))
 				{
-					echo "Match!";
+					$match = TRUE;
+					$_SESSION["USER"] = $consultantUserName;
+					$_SESSION["TYPE"] = $consultantType;
 				}
 			}
 		}
+		return $match;
 	}
-
+	
+	function logout()
+	{
+		global $userName;
+		global $userType;
+		global $messages;
+		unset ($_SESSION["USER"]);
+		unset ($_SESSION["TYPE"]);
+		$userName = "";
+		$userType = "";
+		$messages .= "RESULT:You have been logged out successfully::";
+	}
 	
 	// PAGE RUN-----------------------------------------------------------------------------
 	displayHead();
-	
-	registerPasscode();
-	if ($fAction == "Submit")
+		//Try to log in or logout
+	if (isNullOrEmptyString($userName) && $fAction != "Login"){}
+	else if (isNullOrEmptyString($userName) && $fAction == "Login")
 	{
-		setPasscode();
+		if (login())
+		{
+			$messages .= "RESULT:You have logged in successfully::";
+			$displayMain = TRUE;
+		}
+		else
+		{
+			$messages .= "ERROR:Login Invalid. Try Again::";
+		}
 	}
-	if ($fAction == "Test")
+	else if (!isNullOrEmptyString($userName) && $fAction == "Logout")
 	{
-		testPasscode();
+		$logout();
 	}
-	if ($fAction == "Validate")
+	else
 	{
-		echo validateStaff($_POST["password"]);
+		$displayMain = TRUE;
+	}
+		//Display main admin control panel
+	if ($displayMain == TRUE)
+	{
+		registerPasscode();
+		if ($fAction == "Submit")
+		{
+			setPasscode();
+		}
+	}
+	else
+	{
+		loginForm();
 	}
 	displayMessages();
 	displayFooter();
