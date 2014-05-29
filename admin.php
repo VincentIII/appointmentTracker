@@ -132,23 +132,19 @@
 		echo "</div>";
 	}
 	
-	function validateStaff($userPass)
+	//Used to validate staff passcodes against the database
+	function validateStaff($userpass)
 	{
 		global $connection;
 		$result = "No Match";
-		$cost = 10;
-		$salt = strtr(base64_encode(mcrypt_create_iv(16,MCRYPT_DEV_URANDOM)),'+','.');
-		$salt = sprintf("$2a$%02d$",$cost).$salt;
-		$hash = crypt($userPass,$salt);
 		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode FROM consultants "))
 		{	
-			$stmt->bind_param("s",$hash);
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($staffUserName,$passHash);
 			while ($stmt->fetch())
 			{
-				if (crypt($userPass,$pashHash) === $pashHash)
+				if (password_verify($userpass,$passHash))
 				{
 					$result = $staffUserName;
 				}
@@ -186,18 +182,17 @@
 		return $dropDownExport;
 	}	
 	
+	//Form used to set passcodes for the first time
 	function registerPasscode()
 	{
-		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>".generateDropDowns("consultant")."<input type='text' name='password' value='Password' onfocus='clearThis(this)'><input type='submit' name='action' value='Submit'/><input type='submit' name='action' value='Test'/></form>";
+		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>".generateDropDowns("consultant")."<input type='text' name='password' value='Password' onfocus='clearThis(this)'><input type='submit' name='action' value='Submit'/><input type='submit' name='action' value='Test'/><input type='submit' name='action' value='Validate'/></form>";
 	}
 	
+	//Takes results from form and sets the passcode in the database if it hasn't been set already
 	function setPasscode()
 	{
 		global $connection;
-		$cost = 10;
-		$salt = strtr(base64_encode(mcrypt_create_iv(16,MCRYPT_DEV_URANDOM)),'+','.');
-		$salt = sprintf("$2a$%02d$",$cost).$salt;
-		$hash = crypt($_POST["password"],$salt);
+		$hash = password_hash($_POST["password"],PASSWORD_DEFAULT);
 		echo $hash;
 		if ($stmt = $connection->prepare("UPDATE consultants SET consultantPasscode = ? WHERE consultantUserName = ?"))
 		{
@@ -210,11 +205,6 @@
 	function testPasscode()
 	{
 		global $connection;
-		$cost = 10;
-		$salt = strtr(base64_encode(mcrypt_create_iv(16,MCRYPT_DEV_URANDOM)),'+','.');
-		$salt = sprintf("$2a$%02d$",$cost).$salt;
-		$hash = crypt($_POST["password"],$salt);
-		echo $hash."<br>";
 		if ($stmt = $connection->prepare("SELECT consultantPasscode FROM consultants WHERE consultantUserName = ?"))
 		{
 			$stmt->bind_param("s",$_POST["consultant"]);
@@ -223,16 +213,12 @@
 			$stmt->bind_result($recievedPassword);
 			while ($stmt->fetch())
 			{
-				echo $recievedPassword."<br>";
-				$decrypted = crypt($hash,$recievedPassword);
-				echo $decrypted."<br>";
-				if ($decrypted === $recievedPassword)
+				if (password_verify($_POST["password"],$recievedPassword))
 				{
 					echo "Match!";
 				}
 			}
 		}
-		//printf("Errormessage: %s\n", $connection->error);
 	}
 
 	
@@ -247,6 +233,10 @@
 	if ($fAction == "Test")
 	{
 		testPasscode();
+	}
+	if ($fAction == "Validate")
+	{
+		echo validateStaff($_POST["password"]);
 	}
 	displayMessages();
 	displayFooter();

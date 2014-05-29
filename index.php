@@ -188,25 +188,19 @@
 		}
 	}
 	
-	//Used to match the signature password to the correct staff member.  If no match, then it will return an error code of invalid signature
-	function validateStaff($userPass)
+	//Used to validate staff passcodes against the database
+	function validateStaff($userpass)
 	{
 		global $connection;
 		$result = "No Match";
-		$cost = 10;
-		$salt = strtr(base64_encode(mcrypt_create_iv(16,MCRYPT_DEV_URANDOM)),'+','.');
-		$salt = sprintf("$2a$%02d$",$cost).$salt;
-		$hash = crypt($userPass,$salt);
-		echo $hash;
 		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode FROM consultants "))
 		{	
-			$stmt->bind_param("s",$hash);
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($staffUserName,$passHash);
 			while ($stmt->fetch())
 			{
-				if (crypt($userPass,$pashHash) === $pashHash)
+				if (password_verify($userpass,$passHash))
 				{
 					$result = $staffUserName;
 				}
@@ -218,6 +212,7 @@
 		}
 		return $result;
 	}
+	
 	//Displays legal info above form
 	function displayLegal()
 	{
@@ -359,27 +354,38 @@
 			$stmt->bind_result($ticketNo,$customerFirstName,$customerLastName,$customerFirstNamePickUp,$customerLastNamePickUp,$customerDropOff,$customerPickUp,$consultantDropOff,$consultantPickUp,$staffDropOff,$staffPickUp,$customerUserName,$computerMake,$computerModel,$computerSerialNum,$powerCableQuantity,$powerCableDesc,$mediaQuantity,$mediaDesc,$otherQuantity,$otherDesc,$warrantyStatus,$cssdDriveOut,$altUserName,$altFirstName,$altLastName,$topCondition,$bottomCondition,$screenCondition,$keyboardCondition);
 			while ($stmt->fetch())
 			{
-				$_POST["consultantDropOff"] = $consultantDropOff;
-				$_POST["consultantPickUp"] = $consultantPickUp;
 				echo"<form action='index.php' id='submitForm' method='post' autocomplete='off'>
 				<div class='section1'>
 					<div class='subhead'>Drop Off</div>
-					<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstName' value='$customerFirstName'></td><td class='input'><input type='text' name='customerLastName' value='$customerLastName'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerDropOff'  value='$customerDropOff'></td></tr>
-					<tr><td class='input'>Consultant: </td><td class='input'>
-				</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffDropOff'  value='$staffDropOff'></td></tr>
+					<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstName' disabled></td><td class='input'><input type='text' value='$customerLastName' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerDropOff' disabled></td></tr>
+					<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantDropOff' disabled>
+				</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffDropOff' disabled></td></tr>
 					<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
-					<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' disabled><input type='hidden' name='altFirstName'  value='$altFirstName'></td><td class='input'><input type='text' value='$altLastName' disabled><input type='hidden' name='altLastName' value='$altLastName'></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' disabled><input type='hidden' name='altUserName' value='$altUserName'></td></tr></table>
-				</div>
-				<div class='section2'>
-					<div class='subhead'>Pick Up</div>
-					<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
-					<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstNamePickUp' value='$customerFirstNamePickUp'></td><td class='input'><input type='text' name='customerLastNamePickUp' value='$customerLastNamePickUp'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerPickUp' value='$customerPickUp'></td></tr>
-					<tr><td class='input'>Consultant: </td><td class='input'></td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' name='staffPickUp' value='$staffPickUp'></td></tr></table>
-				</div>
-				<div class='section3'>
+					<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' disabled></td><td class='input'><input type='text' value='$altLastName' disabled></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' disabled></td></tr></table>
+				</div>";
+				//Determind if Section 2 is read-only or editable based off staff and consultant signatures
+				if (isNullOrEmptyString($consultantPickUp) || isNullOrEmptyString($staffPickUp))
+				{
+					echo"<div class='section2'><input type='hidden' name='closedForm' value='FALSE'>
+						<div class='subhead'>Pick Up</div>
+						<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
+						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstNamePickUp'></td><td class='input'><input type='text' name='customerLastNamePickUp'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerPickUp'></td></tr>
+						<tr><td class='input'>Consultant: </td><td class='input'><input type='password' name='consultantPickUp'></td><td></td><td class='input'>Staff: </td><td class='input'><input type='password' name='staffPickUp'></td></tr></table>
+					</div>";
+				}
+				else
+				{
+					echo"<div class='section2'><input type='hidden' name='closedForm' value='TRUE'>
+						<div class='subhead'>Pick Up</div>
+						<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
+						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstNamePickUp' disabled></td><td class='input'><input type='text' value='$customerLastNamePickUp' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerPickUp' disabled></td></tr>
+						<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantPickUp' disabled></td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffPickUp' disabled></td></tr></table>
+					</div>";
+				}
+				echo"<div class='section3'>
 					<div class='subhead'>Departmental Information</div>
-					<table><tr><td class='input'>Username: </td><td><input type='text' name='customerUserName' value='$customerUserName'></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' value='$ticketNo' disabled><input type='hidden' name='ticketNo' value='$ticketNo'><input type='hidden' name='instanceID' value='$instanceID'></td></tr>
-					<tr><td class='input'>Computer: </td><td class='input'><input type='text' name='computerMake' value='$computerMake'></td><td class='input'><input type='text' name='computerModel' value='$computerModel'></td><td class='input'>Serial Number: </td><td class='input'><input type='text' name='computerSerialNum' value='$computerSerialNum'></td></tr></table><br/>
+					<table><tr><td class='input'>Username: </td><td><input type='text' value='$customerUserName' disabled></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' value='$ticketNo' disabled><input type='hidden' name='ticketNo' value='$ticketNo'><input type='hidden' name='instanceID' value='$instanceID'></td></tr>
+					<tr><td class='input'>Computer: </td><td class='input'><input type='text' value='$computerMake' disabled></td><td class='input'><input type='text' value='$computerModel' disabled></td><td class='input'>Serial Number: </td><td class='input'><input type='text' value='$computerSerialNum' disabled></td></tr></table><br/>
 					<table><tr><td class='input'>Cable Quantity: </td><td class='input'><input type='text' name='powerCableQuantity' value='$powerCableQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='powerCableDesc' value='$powerCableDesc'></td></tr>
 					<tr><td class='input'>Drive/Discs Quantity: </td><td class='input'><input type='text' name='mediaQuantity' value='$mediaQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='mediaDesc' value='$mediaDesc'></td></tr>
 					<tr><td class='input'>Other Quantity: </td><td class='input'><input type='text' name='otherQuantity' value='$otherQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='otherDesc'  value='$otherDesc'></td></tr>
@@ -425,30 +431,37 @@
 		global $rightNow;
 		global $instanceID;
 		$break = FALSE;
-			// Verifies all of Drop Off Section is filled out
-		if (isNullOrEmptyString($_POST["customerFirstName"]) || $_POST["customerFirstName"] == "First" || isNullOrEmptyString($_POST["customerLastName"]) || $_POST["customerLastName"] == "Last" || isNullOrEmptyString($_POST["customerDropOff"]) || $_POST["consultantDropOff"] == "IGNORE" || isNullOrEmptyString($_POST["staffDropOff"]))
-		{
-			$messages .= "ERROR:Please have all required info in 'Drop Off'::";
-			$break = TRUE;
-		}
-			// Verifies all of required Departmental Information is filled out
-		if (isNullOrEmptyString($_POST["customerUserName"]) || isNullOrEmptyString($_POST["ticketNo"]) || isNullOrEmptyString($_POST["computerMake"]) || $_POST["computerMake"] == "Make" || $_POST["computerModel"] == "Model" || isNullOrEmptyString($_POST["computerModel"]) || isNullOrEmptyString($_POST["computerSerialNum"]))
-		{
-			$messages .= "ERROR:Please have all required info in 'Departmental Information'::";
-			$break = TRUE;
-		}
+
 			// If not ready for Pick-Up, does not allow for pick-up date to be filled
-		if (isNullOrEmptyString($_POST["customerFirstNamePickUp"]) || isNullOrEmptyString($_POST["customerLastNamePickUp"]) || isNullOrEmptyString($_POST["customerPickUp"]) || $_POST["consultantPickUp"] == "IGNORE" || isNullOrEmptyString($_POST["staffPickUp"]))
+		if ($_POST["closedForm"] == FALSE)
 		{
-			if ($_POST["consultantPickUp"] == "IGNORE")
+			if (isNullOrEmptyString($_POST["customerFirstNamePickUp"]) || isNullOrEmptyString($_POST["customerLastNamePickUp"]) || isNullOrEmptyString($_POST["customerPickUp"]) || $_POST["consultantPickUp"] == "IGNORE" || isNullOrEmptyString($_POST["staffPickUp"]))
 			{
-				$_POST["consultantPickUp"] = NULL;
+				if ($_POST["consultantPickUp"] == "IGNORE")
+				{
+					$_POST["consultantPickUp"] = NULL;
+				}
+				$rightNow = NULL;
 			}
-			$rightNow = NULL;
+			else
+			{
+					//If section is filled out, validate both signature passcodes
+				$_POST["consultantPickUp"] = validateStaff($_POST['consultantPickUp']);
+				$_POST["staffPickUp"] = validateStaff($_POST['staffPickUp']);
+				if ($_POST["consultantPickUp"] == "No Match" || $_POST["staffPickUp"] == "No Match")
+				{
+					$messages .= "ERROR:Please enter the correct password in consultant and staff fields::";
+					$break = TRUE;
+					if ($_POST["consultantPickUp"] == "IGNORE")
+					{
+						$_POST["consultantPickUp"] = NULL;
+					}
+					$rightNow = NULL;
+				}
+			}
 		}
 		if ($break == FALSE)
 		{
-			
 			//Removes all code/tags/inject characters from input.  If empty, sets to NULL
 			foreach($_POST as $key=>$value)
 			{
@@ -458,11 +471,22 @@
 					$_POST[$key] = NULL;
 				}
 			}
-			$query = "UPDATE sheets SET customerFirstName = ?, customerLastName = ?, customerDropOff = ?, datePickUp = ?, consultantDropOff = ?, staffDropOff = ?, customerUserName = ?, computerMake = ?, computerModel = ?, computerSerialNum = ?, powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, altUserName = ?, altFirstName = ?, altLastName = ?, topCondition = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ?, customerFirstNamePickUp = ?,customerLastNamePickUp = ?, customerPickUp = ?, consultantPickUp = ?, staffPickUp = ? WHERE ticketNo = ? AND instanceID = ?";
-			$bindString = "ssssssssssisisisiissssssssssssii";
-			$stmt = $connection->prepare($query);
-			$stmt->bind_param($bindString,$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$_POST['consultantDropOff'],$_POST['staffDropOff'],$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition'],$_POST['customerFirstNamePickUp'],$_POST['customerLastNamePickUp'],$_POST['customerPickUp'],$_POST['consultantPickUp'],$_POST['staffPickUp'],$_POST['ticketNo'],$instanceID);
+			if ($_POST["closedForm"] == FALSE)
+			{
+				echo "Open Form";
+				$query = "UPDATE sheets SET datePickUp = ?, powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, altUserName = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ?, customerFirstNamePickUp = ?,customerLastNamePickUp = ?, customerPickUp = ?, consultantPickUp = ?, staffPickUp = ? WHERE ticketNo = ? AND instanceID = ?";
+				$stmt = $connection->prepare($query);
+				$stmt->bind_param("sisisisiisssssssssii",$rightNow,$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition'],$_POST['customerFirstNamePickUp'],$_POST['customerLastNamePickUp'],$_POST['customerPickUp'],$_POST['consultantPickUp'],$_POST['staffPickUp'],$_POST['ticketNo'],$instanceID);
+			}
+			else
+			{
+				echo "Closed Form";
+				$query = "UPDATE sheets SET powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, topCondition = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ? WHERE ticketNo = ? AND instanceID = ?";
+				$stmt = $connection->prepare($query);
+				$stmt->bind_param("isisisiissssii",$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition'],$_POST['ticketNo'],$instanceID);
+			}
 			$stmt->execute();
+			printf("Errormessage: %s\n", $connection->error);
 			$stmt->store_result();
 		}
 	}
