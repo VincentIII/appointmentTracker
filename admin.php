@@ -95,7 +95,7 @@
 		echo "</div>
 		<footer>
 			<div class='footLinks'>
-				
+				<a href='admin.php?menu=logout'>[logout]</a>
 			</div>
 		</footer>
 			</body>
@@ -177,33 +177,82 @@
 	}	
 	
 	//Form used to set passcodes for the first time
-	function registerPasscode()
+	function resetPasscode()
 	{
-		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>".generateDropDowns("consultant")."<input type='text' name='password' value='Password' onfocus='clearThis(this)'><input type='submit' name='action' value='Submit'/><input type='submit' name='action' value='Test'/><input type='submit' name='action' value='Validate'/></form>";
+		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>
+		<div class='subhead'>Reset Password</div><table>
+		<tr><td class='input'>Old Password:</td><td class='input'><input type='password' name='oldPassword'></td></tr>
+		<tr><td class='input'>New Password:</td><td class='input'><input type='password' name='newPassword1'></td></tr>
+		<tr><td class='input'>Confirm Password:</td><td class='input'><input type='password' name='newPassword2'></td></tr>
+		</table>
+		<div class='action'>
+			<input type='submit' name='action' value='Reset'/>
+		</div>
+		</form>";
 	}
 	
-	//Takes results from form and sets the passcode in the database if it hasn't been set already
+	//Resets password after running two verifications on identity and correct password selection
 	function setPasscode()
 	{
 		global $connection;
-		$hash = password_hash($_POST["password"],PASSWORD_DEFAULT);
-		echo $hash;
-		if ($stmt = $connection->prepare("UPDATE consultants SET consultantPasscode = ? WHERE consultantUserName = ?"))
+		global $messages;
+		$match = FALSE;
+		if ($_POST["newPassword1"] == $_POST["newPassword2"])
 		{
-			$stmt->bind_param("ss",$hash,$_POST["consultant"]);
-			$stmt->execute();
-			$stmt->store_result();
+			if ($stmt = $connection->prepare("SELECT consultantPasscode FROM consultants WHERE consultantUserName = ?"))
+			{	
+				$stmt->bind_param("s",$_SESSION["USER"]);
+				$stmt->execute();
+				$stmt->store_result();
+				$stmt->bind_result($consultantPasscode);
+				while ($stmt->fetch())
+				{
+					if (password_verify($_POST["oldPassword"],$consultantPasscode))
+					{
+						$match = TRUE;
+					}
+				}
+			}
+			if ($match == TRUE)
+			{
+				if ($stmt2 = $connection->prepare("UPDATE consultants SET consultantPasscode = ? WHERE consultantUserName = ?"))
+				{
+					$hash = password_hash($_POST["newPassword1"],PASSWORD_DEFAULT);
+					$stmt2->bind_param("ss",$hash,$_SESSION["USER"]);
+					$stmt2->execute();
+					$stmt2->store_result();
+					$messages .= "RESULT:Password Resetted Successfully::";
+				}
+				else
+				{
+					$messages .= "ERROR:Database Error. Please contact Full-Time Staff::";
+				}
+			}
+			else
+			{
+				$messages .= "ERROR:Old password did not match on in database.  Try Again::";
+			}
+		}
+		else
+		{
+			$messages .= "ERROR:New Passwords did not match. Try again::";
 		}
 	}
 	
+	//Form displayed for logging in to panel
 	function loginForm()
 	{
-		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'><table>
+		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>
+		<div class='subhead'>Log In</div><table>
 		<tr><td class='input'>Username:</td><td class='input'><input type='text' name='username' onfocus='clearThis(this)'></td></tr>
-		<tr><td class='input'>Password:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr>
-		<tr><td class='input' colspan='2'><input type='submit' name='action' value='Login'/></td></tr></table></form>";
+		<tr><td class='input'>Password:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr></table>
+		<div class='action'>
+			<input type='submit' name='action' value='Login'/>
+		</div>
+		</form>";
 	}
 	
+	//Function for logging user into admin section and establishing staff type
 	function login()
 	{
 		global $connection;
@@ -227,6 +276,7 @@
 		return $match;
 	}
 	
+	//Logs user out of admin panel
 	function logout()
 	{
 		global $userName;
@@ -255,9 +305,9 @@
 			$messages .= "ERROR:Login Invalid. Try Again::";
 		}
 	}
-	else if (!isNullOrEmptyString($userName) && $fAction == "Logout")
+	else if (!isNullOrEmptyString($userName) && $fAction == "logout")
 	{
-		$logout();
+		logout();
 	}
 	else
 	{
@@ -266,8 +316,8 @@
 		//Display main admin control panel
 	if ($displayMain == TRUE)
 	{
-		registerPasscode();
-		if ($fAction == "Submit")
+		resetPasscode();
+		if ($fAction == "Reset")
 		{
 			setPasscode();
 		}
