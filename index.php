@@ -39,6 +39,25 @@
 	{
 		$instanceID = $_POST["instanceID"];
 	}
+	
+		//Verify SESSIONs
+	if (!empty($_SESSION["USER"]))
+	{
+		$userName = $_SESSION["USER"];
+	}
+	else
+	{
+		$userName = "";
+	}
+	if (!empty($_SESSION["TYPE"]))
+	{
+		$userType = $_SESSION["TYPE"];
+	}
+	else
+	{
+		$userType = "";
+	}
+	
 		//Verify GETs
 	if (!empty($_GET["menu"]))
 	{
@@ -750,6 +769,8 @@
 			}
 		}
 	}
+	// INCLUDES-----------------------------------------------------------------------------
+	require 'admin.php';
 	// PAGE RUN-----------------------------------------------------------------------------
 	displayHead();
 	if ($fAction == "Submit Sheet")
