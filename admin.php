@@ -2,7 +2,8 @@
 	//Form used to set passcodes for the first time
 	function resetPasscode()
 	{
-		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>
+		global $pageName;
+		echo "<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
 		<div class='subhead'>Reset Password</div><table>
 		<tr><td class='input'>Old Password:</td><td class='input'><input type='password' name='oldPassword'></td></tr>
 		<tr><td class='input'>New Password:</td><td class='input'><input type='password' name='newPassword1'></td></tr>
@@ -65,7 +66,8 @@
 	//Form displayed for logging in to panel
 	function loginForm()
 	{
-		echo "<form action='admin.php' id='submitForm' method='post' autocomplete='off'>
+		global $pageName;
+		echo "<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
 		<div class='subhead'>Log In</div><table>
 		<tr><td class='input'>Username:</td><td class='input'><input type='text' name='username' onfocus='clearThis(this)'></td></tr>
 		<tr><td class='input'>Password:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr></table>
