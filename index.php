@@ -106,13 +106,26 @@
 	function generateDropDowns($type)	
 	{
 		global $connection;
-		if ($type = "consultant")
+		if (strpos($type, 'consultant') !== FALSE)
 		{
 			$query = "SELECT consultantUserName AS code, CONCAT_WS(', ', consultantLastName, consultantFirstName) AS name FROM consultants WHERE consultantActive = 1 ORDER BY consultantLastName ASC ";
 		}
+		if (strpos($type, 'staff') !== FALSE)
+		{
+			$query = "SELECT consultantUserName AS code, CONCAT_WS(', ', consultantLastName, consultantFirstName) AS name FROM consultants WHERE consultantActive = 1 AND consultantType = 2 ORDER BY consultantLastName ASC ";
+		}
 		else{}
 		
-		$dropDownExport = "<select name='$type'>";
+		if ($type == "consultantSearch")
+		{
+			$dropDownExport = "<select name='consultant'>";
+			$dropDownExport .= "<option value='IGNORE'>All</option>\n";
+			$type == "consultant";
+		}
+		else
+		{
+			$dropDownExport = "<select name='$type'>";
+		}
 		if ($stmtDD = $connection->prepare($query))
 		{
 			$stmtDD ->execute();
@@ -120,7 +133,14 @@
 			$stmtDD ->bind_result($code,$name);
 			while ($stmtDD ->fetch())
 			{
-				$dropDownExport .= "<option value='$code'>$name</option>\n";
+				if ($_POST[$type] == $code && !empty($_POST[$type]))
+				{
+					$dropDownExport .= "<option value='$code' selected>$name</option>\n";
+				}
+				else
+				{
+					$dropDownExport .= "<option value='$code'>$name</option>\n";
+				}
 			}
 		}
 		$dropDownExport .= "</select>\n";
@@ -287,16 +307,29 @@
 	}
 
 	//Displays 10 most recent tickets
-	function displayRecent()
+	function displayRecent($type)
 	{
 		global $connection;
 		global $messages;
+		global $userName;
 		$whereTrigger = TRUE;
 		$andTrigger = FALSE;
-		$query = "SELECT ticketNo,instanceID,customerFirstName,customerLastName,dateDropOff,datePickup,customerUserName,computerMake,computerModel,cssdDriveOut FROM sheets ORDER BY dateDropOff DESC LIMIT 10";
-		echo "<div class='subhead'>Recent Tickets</div>";
+		if ($type == 1)
+		{
+			$query = "SELECT ticketNo,instanceID,customerFirstName,customerLastName,dateDropOff,datePickup,customerUserName,computerMake,computerModel,cssdDriveOut FROM sheets WHERE consultantDropOff = ? OR consultantPickUp = ? OR staffDropOff = ? OR staffPickUp = ? ORDER BY dateDropOff DESC LIMIT 5";
+			echo "<div class='subhead'>Personal Recent Tickets</div>";
+		}
+		else
+		{
+			$query = "SELECT ticketNo,instanceID,customerFirstName,customerLastName,dateDropOff,datePickup,customerUserName,computerMake,computerModel,cssdDriveOut FROM sheets ORDER BY dateDropOff DESC LIMIT 5";
+			echo "<div class='subhead'>Recent Tickets</div>";
+		}
 		if ($stmt = $connection->prepare($query))
 		{
+			if ($type == 1)
+			{
+				$stmt->bind_param("ssss",$userName,$userName,$userName,$userName);
+			}
 			$stmt->execute();
 			$stmt->bind_result($ticketNo,$instanceID,$customerFirstName,$customerLastName,$dateDropOff,$datePickup,$customerUserName,$computerMake,$computerModel,$cssdDriveOut);
 			while ($stmt->fetch())
@@ -330,6 +363,7 @@
 				echo "</div></div></div>";
 			}
 		}
+		echo "<br>";
 	}
 	
 	// INCLUDES-----------------------------------------------------------------------------
@@ -360,9 +394,17 @@
 	}
 	else if ($fAction == "Delete Sheet")
 	{
-		displayLegal();
-		deleteFormInfo();
-		displayForm();
+		if (verifySessions() == 2)
+		{
+			displayLegal();
+			deleteFormInfo();
+			displayForm();
+		}
+		else
+		{
+			displayLegal();
+			editForm($_POST["ticketNo"]);
+		}
 	}
 	else if ($fAction == "search")
 	{
@@ -424,7 +466,6 @@
 				loginForm();
 			}
 		}
-		
 	}
 	else if ($fAction == "logout")
 	{
@@ -432,10 +473,7 @@
 		{
 			logout();
 		}
-		else
-		{
-			$defaultDisplay = TRUE;
-		}
+		$defaultDisplay = TRUE;
 	}
 	else if ($fAction == "password")
 	{
@@ -454,10 +492,7 @@
 		{
 			setPasscode();
 		}
-		else
-		{
-			$defaultDisplay = TRUE;
-		}
+		resetPasscode();
 	}
 	else
 	{
@@ -466,7 +501,11 @@
 	
 	if ($defaultDisplay == TRUE)
 	{
-		displayRecent();
+		if (verifySessions() != 0)
+		{
+			displayRecent(1);
+		}
+		displayRecent(0);
 	}
 	displayMessages();
 	displayFooter();

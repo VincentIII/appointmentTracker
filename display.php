@@ -52,6 +52,7 @@
 		global $connection;
 		global $instanceID;
 		global $pageName;
+		global $userName;
 			//If $instanceID is set from Post or Get variables, then use different query
 		if (isNullOrEmptyString($instanceID))
 		{
@@ -76,39 +77,94 @@
 			$stmt->bind_result($ticketNo,$customerFirstName,$customerLastName,$customerFirstNamePickUp,$customerLastNamePickUp,$customerDropOff,$customerPickUp,$consultantDropOff,$consultantPickUp,$staffDropOff,$staffPickUp,$customerUserName,$computerMake,$computerModel,$computerSerialNum,$powerCableQuantity,$powerCableDesc,$mediaQuantity,$mediaDesc,$otherQuantity,$otherDesc,$warrantyStatus,$cssdDriveOut,$altUserName,$altFirstName,$altLastName,$topCondition,$bottomCondition,$screenCondition,$keyboardCondition);
 			while ($stmt->fetch())
 			{
-				echo"<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
-				<div class='section1'>
-					<div class='subhead'>Drop Off</div>
-					<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstName' disabled></td><td class='input'><input type='text' value='$customerLastName' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerDropOff' disabled></td></tr>
-					<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantDropOff' disabled>
-				</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffDropOff' disabled></td></tr>
-					<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
-					<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' disabled></td><td class='input'><input type='text' value='$altLastName' disabled></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' disabled></td></tr></table>
-				</div>";
+				$_POST["consultantDropOff"] = $consultantDropOff;
+				$_POST["staffDropOff"] = $staffDropOff;
+				if (verifySessions() == 2)
+				{
+					echo"<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
+					<div class='section1'>
+						<div class='subhead'>Drop Off</div>
+						<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstName' name='customerFirstName'></td><td class='input'><input type='text' value='$customerLastName' name='customerLastName'></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerDropOff' name='customerDropOff'></td></tr>
+						<tr><td class='input'>Consultant: </td><td class='input'>".generateDropDowns("consultantDropOff")."
+					</td><td></td><td class='input'>Staff: </td><td class='input'>".generateDropDowns("staffDropOff")."</td></tr>
+						<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
+						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' name='altFirstName'></td><td class='input'><input type='text' value='$altLastName' name='altLastName'></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' name='altUserName'></td></tr></table>
+					</div>";
+				}
+				else
+				{
+					echo"<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
+					<div class='section1'>
+						<div class='subhead'>Drop Off</div>
+						<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstName' disabled></td><td class='input'><input type='text' value='$customerLastName' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerDropOff' disabled></td></tr>
+						<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantDropOff' disabled>
+					</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffDropOff' disabled></td></tr>
+						<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
+						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' disabled></td><td class='input'><input type='text' value='$altLastName' disabled></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' disabled></td></tr></table>
+					</div>";
+				}
+				
 				//Determind if Section 2 is read-only or editable based off staff and consultant signatures
 				if (isNullOrEmptyString($consultantPickUp) || isNullOrEmptyString($staffPickUp))
 				{
 					echo"<div class='section2'><input type='hidden' name='closedForm' value='FALSE'>
 						<div class='subhead'>Pick Up</div>
 						<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
-						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstNamePickUp'></td><td class='input'><input type='text' name='customerLastNamePickUp'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerPickUp'></td></tr>
-						<tr><td class='input'>Consultant: </td><td class='input'><input type='password' name='consultantPickUp'></td><td></td><td class='input'>Staff: </td><td class='input'><input type='password' name='staffPickUp'></td></tr></table>
-					</div>";
+						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' name='customerFirstNamePickUp'></td><td class='input'><input type='text' name='customerLastNamePickUp'></td><td class='input'>Signature: </td><td class='input'><input type='text' name='customerPickUp'></td></tr><tr>";
+						if (verifySessions() == 2)
+						{
+							$_POST["consultantPickUp"] = $userName;
+							$_POST["staffPickUp"] = $userName;
+							echo"<td class='input'>Consultant: </td><td class='input'>".generateDropDowns("consultantPickUp")."</td><td></td><td class='input'>Staff: </td><td class='input'>".generateDropDowns("staffPickUp")."</td>";
+						}
+						else if (verifySessions() == 1)
+						{
+							echo "<td class='input'>Consultant: </td><td class='input'><input type='text' name='consultantPickUp' value='$userName' disabled><input type='hidden' name='consultantPickUp' value='$userName'></td><td></td><td class='input'>Staff: </td><td class='input'><input type='password' name='staffPickUp'></td>";
+						}
+						else
+						{
+							echo "<td class='input'>Consultant: </td><td class='input'><input type='password' name='consultantPickUp'></td><td></td><td class='input'>Staff: </td><td class='input'><input type='password' name='staffPickUp'></td>";
+						}
+					echo"</tr></table></div>";
 				}
 				else
 				{
-					echo"<div class='section2'><input type='hidden' name='closedForm' value='TRUE'>
-						<div class='subhead'>Pick Up</div>
-						<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
-						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstNamePickUp' disabled></td><td class='input'><input type='text' value='$customerLastNamePickUp' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerPickUp' disabled></td></tr>
-						<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantPickUp' disabled></td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffPickUp' disabled></td></tr></table>
-					</div>";
+					$_POST["consultantPickUp"] = $consultantPickUp;
+					$_POST["staffPickUp"] = $staffPickUp;
+					if (verifySessions() == 2)
+					{
+						echo"<div class='section2'><input type='hidden' name='closedForm' value='TRUE'>
+							<div class='subhead'>Pick Up</div>
+							<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
+							<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstNamePickUp' name='customerFirstNamePickUp'></td><td class='input'><input type='text' value='$customerLastNamePickUp' name='customerLastNamePickUp'></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerPickUp' name='customerPickUp'></td></tr>
+							<tr><td class='input'>Consultant: </td><td class='input'>".generateDropDowns("consultantPickUp")."</td><td></td><td class='input'>Staff: </td><td class='input'>".generateDropDowns("staffPickUp")."</td></tr></table>
+						</div>";
+					}
+					else
+					{
+						echo"<div class='section2'><input type='hidden' name='closedForm' value='TRUE'>
+							<div class='subhead'>Pick Up</div>
+							<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
+							<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstNamePickUp' disabled></td><td class='input'><input type='text' value='$customerLastNamePickUp' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerPickUp' disabled></td></tr>
+							<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantPickUp' disabled></td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffPickUp' disabled></td></tr></table>
+						</div>";
+					}
 				}
-				echo"<div class='section3'>
-					<div class='subhead'>Departmental Information</div>
-					<table><tr><td class='input'>Username: </td><td><input type='text' value='$customerUserName' disabled></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' value='$ticketNo' disabled><input type='hidden' name='ticketNo' value='$ticketNo'><input type='hidden' name='instanceID' value='$instanceID'></td></tr>
-					<tr><td class='input'>Computer: </td><td class='input'><input type='text' value='$computerMake' disabled></td><td class='input'><input type='text' value='$computerModel' disabled></td><td class='input'>Serial Number: </td><td class='input'><input type='text' value='$computerSerialNum' disabled></td></tr></table><br/>
-					<table><tr><td class='input'>Cable Quantity: </td><td class='input'><input type='text' name='powerCableQuantity' value='$powerCableQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='powerCableDesc' value='$powerCableDesc'></td></tr>
+				if (verifySessions() == 2)
+				{
+					echo"<div class='section3'>
+						<div class='subhead'>Departmental Information</div>
+						<table><tr><td class='input'>Username: </td><td><input type='text' value='$customerUserName' name='customerUserName'></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' value='$ticketNo' disabled><input type='hidden' name='ticketNo' value='$ticketNo'><input type='hidden' name='instanceID' value='$instanceID'></td></tr>
+						<tr><td class='input'>Computer: </td><td class='input'><input type='text' value='$computerMake' name='computerMake'></td><td class='input'><input type='text' value='$computerModel' name='computerModel'></td><td class='input'>Serial Number: </td><td class='input'><input type='text' value='$computerSerialNum' name='computerSerialNum'></td></tr></table><br/>";
+				}
+				else
+				{
+					echo"<div class='section3'>
+						<div class='subhead'>Departmental Information</div>
+						<table><tr><td class='input'>Username: </td><td><input type='text' value='$customerUserName' disabled></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' value='$ticketNo' disabled><input type='hidden' name='ticketNo' value='$ticketNo'><input type='hidden' name='instanceID' value='$instanceID'></td></tr>
+						<tr><td class='input'>Computer: </td><td class='input'><input type='text' value='$computerMake' disabled></td><td class='input'><input type='text' value='$computerModel' disabled></td><td class='input'>Serial Number: </td><td class='input'><input type='text' value='$computerSerialNum' disabled></td></tr></table><br/>";
+				}
+				echo"<table><tr><td class='input'>Cable Quantity: </td><td class='input'><input type='text' name='powerCableQuantity' value='$powerCableQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='powerCableDesc' value='$powerCableDesc'></td></tr>
 					<tr><td class='input'>Drive/Discs Quantity: </td><td class='input'><input type='text' name='mediaQuantity' value='$mediaQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='mediaDesc' value='$mediaDesc'></td></tr>
 					<tr><td class='input'>Other Quantity: </td><td class='input'><input type='text' name='otherQuantity' value='$otherQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='otherDesc'  value='$otherDesc'></td></tr>
 					<tr><td colspan='2'>Is the computer under warranty? </td>";
@@ -137,8 +193,12 @@
 					<tr><td><textarea rows='3' cols='30' name='topCondition'>$topCondition</textarea></td><td><textarea rows='3' cols='30' name='bottomCondition'>$bottomCondition</textarea></td><td><textarea rows='3' cols='30' name='screenCondition'>$screenCondition</textarea></td><td><textarea rows='3' cols='30' name='keyboardCondition'>$keyboardCondition</textarea></td></tr></table>
 				</div>
 				<div class='action'>
-					<input type='submit' name='action' value='Update Sheet'/><input type='submit' name='action' value='Delete Sheet'/>
-				</div>
+					<input type='submit' name='action' value='Update Sheet'/>";
+				if (verifySessions() == 2)
+				{
+					echo"<input type='submit' name='action' value='Delete Sheet'/>";
+				}
+					echo"</div>
 				</form>";
 			}
 		}
@@ -151,7 +211,7 @@
 		echo "<div class='subhead'>Search</div>
 				<form action='$pageName' id='searchForm' method='post'>
 				<table><tr><td class='input'>Employee</td><td cclass='input'>";
-		echo generateDropDowns("consultant");
+		echo generateDropDowns("consultantSearch");
 		echo "</td></tr>\n
 		<tr><td class='input'>Timespan</td><td class='input'><input type='date' name='startDate'></td><td class='input'><input type='date' name='endDate'></td></td></tr>\n
 		<tr><td class='input'>Ticket Number</td><td class='input'><input type='text' name='ticketNumber'></td></tr>\n

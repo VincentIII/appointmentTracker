@@ -80,6 +80,8 @@
 	//Function for logging user into admin section and establishing staff type
 	function login()
 	{
+		global $userName;
+		global $userType;
 		global $connection;
 		$match = FALSE;
 		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode,consultantType FROM consultants WHERE consultantUserName = ?"))
@@ -95,6 +97,8 @@
 					$match = TRUE;
 					$_SESSION["USER"] = $consultantUserName;
 					$_SESSION["TYPE"] = $consultantType;
+					$userName = $consultantUserName;
+					$userType = $consultantType;
 				}
 			}
 		}
@@ -113,39 +117,4 @@
 		$userType = "";
 		$messages .= "RESULT:You have been logged out successfully::";
 	}
-
-	/*if (isNullOrEmptyString($userName) && $fAction != "Login"){}
-	else if (isNullOrEmptyString($userName) && $fAction == "Login")
-	{
-		if (login())
-		{
-			$messages .= "RESULT:You have logged in successfully::";
-			$displayMain = TRUE;
-		}
-		else
-		{
-			$messages .= "ERROR:Login Invalid. Try Again::";
-		}
-	}
-	else if (!isNullOrEmptyString($userName) && $fAction == "logout")
-	{
-		logout();
-	}
-	else
-	{
-		$displayMain = TRUE;
-	}
-		//Display main admin control panel
-	if ($displayMain == TRUE)
-	{
-		if ($fAction == "Reset")
-		{
-			setPasscode();
-		}
-		resetPasscode();
-	}
-	else
-	{
-		loginForm();
-	}*/
 ?>
