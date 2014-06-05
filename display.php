@@ -196,7 +196,7 @@
 					<input type='submit' name='action' value='Update Sheet'/>";
 				if (verifySessions() == 2)
 				{
-					echo"<input type='submit' name='action' value='Delete Sheet'/>";
+					echo"<input type='submit' name='action' value='Delete Sheet'/><input type='submit' name='action' value='Email Customer'/>";
 				}
 					echo"</div>
 				</form>";
@@ -217,5 +217,20 @@
 		<tr><td class='input'>Ticket Number</td><td class='input'><input type='text' name='ticketNumber'></td></tr>\n
 		<tr><td class='input'>Customer Username</td><td class='input'><input type='text' name='customerUserName'></td></tr>\n
 		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Search Sheets'/></td></tr></table></form>\n";
+	}
+	
+	//Displays form for searching emails
+	function emailSearchForm()
+	{
+		global $pageName;
+		echo "<div class='subhead'>Email Search</div>
+				<form action='$pageName' id='searchForm' method='post'>
+				<table><tr><td class='input'>Employee</td><td cclass='input'>";
+		echo generateDropDowns("consultantSearch");
+		echo "</td></tr>\n
+		<tr><td class='input'>Timespan</td><td class='input'><input type='date' name='startDate'></td><td class='input'><input type='date' name='endDate'></td></td></tr>\n
+		<tr><td class='input'>Ticket Number</td><td class='input'><input type='text' name='ticketNumber'></td></tr>\n
+		<tr><td class='input'>Customer Username</td><td class='input'><input type='text' name='customerUserName'></td></tr>\n
+		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Search Email'/></td></tr></table></form>\n";
 	}
 ?>

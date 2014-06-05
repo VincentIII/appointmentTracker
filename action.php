@@ -1,6 +1,6 @@
 <?php
 	//Creates new entry in check-in database
-	function submitFormInfo()
+	function submitFormFunc()
 	{
 		global $messages;
 		global $rightNow;
@@ -66,7 +66,7 @@
 	}
 
 	//Used to update check-in sheet info when edited
-	function editFormInfo()
+	function editFormFunc()
 	{
 		global $messages;
 		global $connection;
@@ -160,7 +160,7 @@
 	}
 	
 	//Used to delete check-in sheets
-	function deleteFormInfo()
+	function deleteFormFunc()
 	{
 		global $messages;
 		global $connection;
@@ -187,7 +187,7 @@
 	}
 	
 	//Displays all matching check-ins to a search quota
-	function searchFormInfo()
+	function searchFormFunc()
 	{
 		global $connection;
 		global $messages;

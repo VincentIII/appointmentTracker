@@ -1,6 +1,6 @@
 <?php
 	//Form used to set passcodes for the first time
-	function resetPasscode()
+	function passwordForm()
 	{
 		global $pageName;
 		echo "<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
@@ -16,7 +16,7 @@
 	}
 	
 	//Resets password after running two verifications on identity and correct password selection
-	function setPasscode()
+	function passwordFunc()
 	{
 		global $connection;
 		global $messages;
@@ -78,7 +78,7 @@
 	}
 	
 	//Function for logging user into admin section and establishing staff type
-	function login()
+	function loginFunc()
 	{
 		global $userName;
 		global $userType;
@@ -106,7 +106,7 @@
 	}
 	
 	//Logs user out of admin panel
-	function logout()
+	function logoutFunc()
 	{
 		global $userName;
 		global $userType;

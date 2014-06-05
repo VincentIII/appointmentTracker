@@ -106,6 +106,7 @@
 	function generateDropDowns($type)	
 	{
 		global $connection;
+		global $userName;
 		if (strpos($type, 'consultant') !== FALSE)
 		{
 			$query = "SELECT consultantUserName AS code, CONCAT_WS(', ', consultantLastName, consultantFirstName) AS name FROM consultants WHERE consultantActive = 1 ORDER BY consultantLastName ASC ";
@@ -121,6 +122,14 @@
 			$dropDownExport = "<select name='consultant'>";
 			$dropDownExport .= "<option value='IGNORE'>All</option>\n";
 			$type == "consultant";
+			if (verifySessions() != 0)
+			{
+				$_POST["consultantSearch"] = $userName;
+			}
+			else
+			{
+				$_POST["consultantSearch"] = "";
+			}
 		}
 		else
 		{
@@ -156,8 +165,12 @@
 		echo "</div>
 		<footer>
 			<div class='footLinks'>
-				<a href='$pageName'>[home]</a> <a href='$pageName?menu=create'>[create]</a> <a href='$pageName?menu=search'>[search]</a>
-			</div>
+				<a href='$pageName'>[home]</a> <a href='$pageName?menu=create'>[create]</a> <a href='$pageName?menu=search'>[search]</a>";
+		if (verifySessions() == 2)
+		{
+			echo " <a href='$pageName?menu=emailer'>[email]</a>";
+		}
+			echo"</div>
 			<div class='adminLinks'>";
 		if (verifySessions() == 0 && $loginSuccess == FALSE)
 		{
@@ -376,7 +389,7 @@
 	if ($fAction == "Submit Sheet")
 	{
 		displayLegal();
-		submitFormInfo();
+		submitFormFunc();
 		if ($break == FALSE)
 		{
 			editForm($_POST["ticketNo"]);
@@ -389,7 +402,7 @@
 	else if ($fAction == "Update Sheet")
 	{
 		displayLegal();
-		editFormInfo();
+		editFormFunc();
 		editForm($_POST["ticketNo"]);
 	}
 	else if ($fAction == "Delete Sheet")
@@ -397,7 +410,7 @@
 		if (verifySessions() == 2)
 		{
 			displayLegal();
-			deleteFormInfo();
+			deleteFormFunc();
 			displayForm();
 		}
 		else
@@ -420,7 +433,7 @@
 		{
 			$_POST["endDate"] = "IGNORE";
 		}
-		searchFormInfo();
+		searchFormFunc();
 	}
 	else if ($fAction == "searchT")
 	{
@@ -454,7 +467,7 @@
 	{
 		if (verifySessions() == 0)
 		{
-			if (login())
+			if (loginFunc())
 			{
 				$messages .= "RESULT:You have logged in successfully::";
 				$loginSuccess = TRUE;
@@ -471,7 +484,7 @@
 	{
 		if (verifySessions() != 0)
 		{
-			logout();
+			logoutFunc();
 		}
 		$defaultDisplay = TRUE;
 	}
@@ -479,7 +492,7 @@
 	{
 		if (verifySessions() != 0)
 		{
-			resetPasscode();
+			passwordForm();
 		}
 		else
 		{
@@ -490,9 +503,42 @@
 	{
 		if (verifySessions() != 0)
 		{
-			setPasscode();
+			passwordFunc();
 		}
-		resetPasscode();
+		passwordForm();
+	}
+	else if ($fAction == "emailer")
+	{
+		if (verifySessions() == 2)
+		{
+			emailSearchForm();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
+	}
+	else if ($fAction == "Search Email")
+	{
+		if (verifySessions() == 2)
+		{
+			emailSearchFunc();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
+	}
+	else if ($fAction == "Email Customer")
+	{
+		if (verifySessions() == 2)
+		{
+			sendEmailForm();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
 	}
 	else
 	{
