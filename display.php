@@ -233,4 +233,37 @@
 		<tr><td class='input'>Customer Username</td><td class='input'><input type='text' name='customerUserName'></td></tr>\n
 		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Search Email'/></td></tr></table></form>\n";
 	}
+	
+	//Displays info page that allows for emailer to send emails and see what has been previously sent
+	function emailInfoForm()
+	{
+		global $connection;
+		global $pageName;
+		$ticketNo = $_POST["ticketNo"];
+		$instanceID = $_POST["instanceID"];
+		$customerUserName = $_POST["customerUserName"];
+		$customerFirstName = $_POST["customerFirstName"];
+		$customerLastName = $_POST["customerLastName"];
+			//Don't Create until 'Emails' have been sent
+		echo "<div class='subhead'>Previous Emails</div>";
+		echo "<div class='subhead'>Send Email</div>
+		<form action='$pageName' id='emailForm' method='post'>
+				<table><tr><td class='input'>Email Type</td><td cclass='input'>";
+		echo generateDropDowns("emailType");
+		echo "</td></tr>\n
+		<tr><td class='input'>Extra Comments</td><td class='input'><textarea rows='4' cols='18' name='additionalBody'></textarea></td></tr>\n
+		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Send Email'/></td></tr></table>
+		<input type='hidden' name='ticketNo' value='$ticketNo'>
+		<input type='hidden' name='instanceID' value='$instanceID'>
+		<input type='hidden' name='customerUserName' value='$customerUserName'>
+		<input type='hidden' name='customerFirstName' value='$customerFirstName'>
+		<input type='hidden' name='customerLastName' value='$customerLastName'></form>\n";
+	}
+	
+	//Displays a 'copy' of what a past email looked like
+	function emailDisplayForm()
+	{
+		global $connection;
+		global $pageName;
+	}
 ?>

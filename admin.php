@@ -83,6 +83,7 @@
 		global $userName;
 		global $userType;
 		global $connection;
+		global $rightNow;
 		$match = FALSE;
 		if ($stmt = $connection->prepare("SELECT consultantUserName,consultantPasscode,consultantType FROM consultants WHERE consultantUserName = ?"))
 		{	
@@ -101,6 +102,14 @@
 					$userType = $consultantType;
 				}
 			}
+		}
+		if ($match == TRUE)
+		{
+			$query = "UPDATE consultants SET lastSignedIn = ?, lastIPAddress = ? WHERE consultantUserName = ?";
+			$stmt = $connection->prepare($query);
+			$stmt->bind_param("sss",$rightNow,$_SERVER['REMOTE_ADDR'],$userName);
+			$stmt->execute();
+			$stmt->store_result();
 		}
 		return $match;
 	}

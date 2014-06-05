@@ -135,24 +135,37 @@
 		{
 			$dropDownExport = "<select name='$type'>";
 		}
-		if ($stmtDD = $connection->prepare($query))
+		if ($type == "emailType")
 		{
-			$stmtDD ->execute();
-			$stmtDD ->store_result();
-			$stmtDD ->bind_result($code,$name);
-			while ($stmtDD ->fetch())
+			$dropDownExport = "<select name='emailType'>";
+			$sectArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Data Drive",4=>"Appointment Closed");
+			foreach ($sectArray as $key => $value)
 			{
-				if ($_POST[$type] == $code && !empty($_POST[$type]))
+				$dropDownExport .= "<option value='$key'>$value</option>\n";
+			}
+			$dropDownExport .= "</select><br/>\n";
+		}
+		else
+		{
+			if ($stmtDD = $connection->prepare($query))
+			{
+				$stmtDD ->execute();
+				$stmtDD ->store_result();
+				$stmtDD ->bind_result($code,$name);
+				while ($stmtDD ->fetch())
 				{
-					$dropDownExport .= "<option value='$code' selected>$name</option>\n";
-				}
-				else
-				{
-					$dropDownExport .= "<option value='$code'>$name</option>\n";
+					if ($_POST[$type] == $code && !empty($_POST[$type]))
+					{
+						$dropDownExport .= "<option value='$code' selected>$name</option>\n";
+					}
+					else
+					{
+						$dropDownExport .= "<option value='$code'>$name</option>\n";
+					}
 				}
 			}
+			$dropDownExport .= "</select>\n";
 		}
-		$dropDownExport .= "</select>\n";
 		return $dropDownExport;
 	}	
 	
@@ -533,7 +546,18 @@
 	{
 		if (verifySessions() == 2)
 		{
-			sendEmailForm();
+			emailInfoForm();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
+	}
+	else if ($fAction == "Send Email")
+	{
+		if (verifySessions() == 2)
+		{
+			sendEmailFunc();
 		}
 		else
 		{

@@ -75,17 +75,14 @@
 		global $instanceID;
 		global $userName;
 		$break = FALSE;
-
 			// If not ready for Pick-Up, does not allow for pick-up date to be filled
-		if ($_POST["closedForm"] == FALSE)
+		if ($_POST["closedForm"] == "FALSE")
 		{
-			if (isNullOrEmptyString($_POST["customerFirstNamePickUp"]) || isNullOrEmptyString($_POST["customerLastNamePickUp"]) || isNullOrEmptyString($_POST["customerPickUp"]) || $_POST["consultantPickUp"] == "IGNORE" || isNullOrEmptyString($_POST["staffPickUp"]))
+			if (isNullOrEmptyString($_POST["customerFirstNamePickUp"]) || isNullOrEmptyString($_POST["customerLastNamePickUp"]) || isNullOrEmptyString($_POST["customerPickUp"]) || isNullOrEmptyString($_POST["consultantPickUp"]) || isNullOrEmptyString($_POST["staffPickUp"]))
 			{
-				if ($_POST["consultantPickUp"] == "IGNORE")
-				{
-					$_POST["consultantPickUp"] = NULL;
-				}
 				$rightNow = NULL;
+				$_POST["consultantPickUp"] = NULL;
+				$_POST["staffPickUp"] = NULL;
 			}
 			else
 			{
@@ -126,7 +123,7 @@
 			}
 			if (verifySessions() == 2)
 			{
-				if ($_POST["closedForm"] == FALSE)
+				if ($_POST["closedForm"] == "FALSE")
 				{
 					$query = "UPDATE sheets SET customerFirstName = ?, customerLastName = ?, customerDropOff = ?, datePickUp = ?, consultantDropOff = ?, staffDropOff = ?, customerUserName = ?, computerMake = ?, computerModel = ?, computerSerialNum = ?,  powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, altUserName = ?, altFirstName = ?, altLastName = ?,  topCondition = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ?, customerFirstNamePickUp = ?,customerLastNamePickUp = ?, customerPickUp = ?, consultantPickUp = ?, staffPickUp = ? WHERE ticketNo = ? AND instanceID = ?";
 					$stmt = $connection->prepare($query);
@@ -134,14 +131,14 @@
 				}
 				else
 				{
-					$query = "UPDATE sheets SET customerFirstName = ?, customerLastName = ?, customerDropOff = ?, datePickUp = ?, consultantDropOff = ?, staffDropOff = ?, customerUserName = ?, computerMake = ?, computerModel = ?, computerSerialNum = ?,  powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, altUserName = ?, altFirstName = ?, altLastName = ?,  topCondition = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ?, WHERE ticketNo = ? AND instanceID = ?";
+					$query = "UPDATE sheets SET customerFirstName = ?, customerLastName = ?, customerDropOff = ?, datePickUp = ?, consultantDropOff = ?, staffDropOff = ?, customerUserName = ?, computerMake = ?, computerModel = ?, computerSerialNum = ?,  powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, altUserName = ?, altFirstName = ?, altLastName = ?,  topCondition = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ? WHERE ticketNo = ? AND instanceID = ?";
 					$stmt = $connection->prepare($query);
 					$stmt->bind_param("ssssssssssisisisiisssssssii",$_POST['customerFirstName'],$_POST['customerLastName'],$_POST['customerDropOff'],$rightNow,$_POST['consultantDropOff'],$_POST['staffDropOff'],$_POST['customerUserName'],$_POST['computerMake'],$_POST['computerModel'],$_POST['computerSerialNum'],$_POST['powerCableQuantity'],$_POST['powerCableDesc'],$_POST['mediaQuantity'],$_POST['mediaDesc'],$_POST['otherQuantity'],$_POST['otherDesc'],$_POST['warrantyStatus'],$_POST['cssdDriveOut'],$_POST['altUserName'],$_POST['altFirstName'],$_POST['altLastName'],$_POST['topCondition'],$_POST['bottomCondition'],$_POST['screenCondition'],$_POST['keyboardCondition'],$_POST['ticketNo'],$instanceID);
 				}
 			}
 			else
 			{
-				if ($_POST["closedForm"] == FALSE)
+				if ($_POST["closedForm"] == "FALSE")
 				{
 					$query = "UPDATE sheets SET datePickUp = ?, powerCableQuantity = ?, powerCableDesc = ?, mediaQuantity = ?, mediaDesc = ?, otherQuantity = ?, otherDesc = ?, warrantyStatus = ?, cssdDriveOut = ?, topCondition = ?, bottomCondition = ?, screenCondition = ?, keyboardCondition = ?, customerFirstNamePickUp = ?,customerLastNamePickUp = ?, customerPickUp = ?, consultantPickUp = ?, staffPickUp = ? WHERE ticketNo = ? AND instanceID = ?";
 					$stmt = $connection->prepare($query);
@@ -360,4 +357,40 @@
 		}
 	}
 	
+	//Sends Email to Customer
+	function sendEmailFunc()
+	{
+		global $messages;
+		global $connection;
+		global $rightNow;
+		global $userName;
+		print_r($_POST);
+		$additonalBody = trim(preg_replace('/ +/', ' ', preg_replace('/[^A-Za-z0-9 ]/', ' ', urldecode(html_entity_decode(strip_tags($_POST['additionalBody']))))));
+		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID'],$additionalBody);
+		$email = $_POST['customerUserName']."@pitt.edu";
+		$headers = "From: Student Computing Services <resnet@pitt.edu>\r\n" . "Reply-To: helpdesk@pitt.edu\r\n";
+        $headers .= "Content-Type: text/plain; charset=ISO_8859-1\r\n";
+		if (@mail($email,$subject,$body,$headers))
+		{
+			$messages .= "RESULT:Email Sent Successfully!::";
+			
+		}
+		else
+		{
+			$messages .= "ERROR:Sending Email Failed::";
+		}
+	}
+	
+	//Creates the body of an email for sending to a customer and for archive viewing
+	function emailBodyFunc($firstName,$type,$ticketNo,$instanceID)
+	{
+		$sectArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Data Drive",4=>"Appointment Closed");
+		if ($type == 0)
+		{
+			
+		}
+		else
+		{
+		}
+	}
 ?>
