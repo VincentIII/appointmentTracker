@@ -16,6 +16,8 @@
 	$break = FALSE;
 	$instanceID = "";
 	$pageName = "index.php";
+	$defaultDisplay = FALSE;
+	$loginSuccess = FALSE;
 	
 		//Used for Daylight Saving Time Adjustments
 	if (date("I", time()) == TRUE)
@@ -130,13 +132,14 @@
 	{
 		global $userName;
 		global $pageName;
+		global $loginSuccess;
 		echo "</div>
 		<footer>
 			<div class='footLinks'>
 				<a href='$pageName'>[home]</a> <a href='$pageName?menu=create'>[create]</a> <a href='$pageName?menu=search'>[search]</a>
 			</div>
 			<div class='adminLinks'>";
-		if (isNullOrEmptyString($userName))
+		if (verifySessions() == 0 && $loginSuccess == FALSE)
 		{
 			echo"<a href='$pageName?menu=login'>[login]</a>";
 		}
@@ -200,6 +203,44 @@
 		echo "</div>";
 	}
 
+	//Used to verify that consultant is logged in and what their status is
+	//Returns 0 if invalid/not logged in.  Returns 1 
+	function verifySessions()
+	{
+		global $userName;
+		global $userType;
+		global $connection;
+		if (isNullOrEmptyString($userName) || isNullOrEmptyString($userType))
+		{
+			return 0;
+		}
+		else
+		{
+			if ($stmt = $connection->prepare("SELECT consultantType FROM consultants WHERE consultantUserName = ?"))
+			{	
+				$stmt->bind_param("s",$userName);
+				$stmt->execute();
+				$stmt->store_result();
+				$stmt->bind_result($consultantType);
+				while ($stmt->fetch())
+				{
+					if ($consultantType == $userType)
+					{
+						return $userType;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	
 	//Looks up to see if there is already a previous sheet with a ticket number and creates a instanceID
 	//Due to how the first instance of a ticket will have an ID of 0, the number pulled that match become the new instanceID
 	//EG: If ticket 1234421 has 2 sheets made in its name already, the new instanceID will be 2
@@ -290,10 +331,12 @@
 			}
 		}
 	}
+	
 	// INCLUDES-----------------------------------------------------------------------------
 	require 'display.php';		//Display Functions
 	require 'action.php';		//Form-Action Functions
 	require 'admin.php';		//Admin Functions
+	
 	// PAGE RUN-----------------------------------------------------------------------------
 	displayHead();
 	if ($fAction == "Submit Sheet")
@@ -356,17 +399,72 @@
 	}
 	else if ($fAction == "login")
 	{
-		loginForm();
+		if (verifySessions() == 0)
+		{
+			loginForm();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
+	}
+	else if ($fAction == "Log in")
+	{
+		if (verifySessions() == 0)
+		{
+			if (login())
+			{
+				$messages .= "RESULT:You have logged in successfully::";
+				$loginSuccess = TRUE;
+				$defaultDisplay = TRUE;
+			}
+			else
+			{
+				$messages .= "ERROR:Login Invalid. Try Again::";
+				loginForm();
+			}
+		}
+		
 	}
 	else if ($fAction == "logout")
 	{
-		logout();
+		if (verifySessions() != 0)
+		{
+			logout();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
 	}
 	else if ($fAction == "password")
 	{
-		resetPasscode();
+		if (verifySessions() != 0)
+		{
+			resetPasscode();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
+	}
+	else if ($fAction == "Reset")
+	{
+		if (verifySessions() != 0)
+		{
+			setPasscode();
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
 	}
 	else
+	{
+		$defaultDisplay = TRUE;
+	}
+	
+	if ($defaultDisplay == TRUE)
 	{
 		displayRecent();
 	}

@@ -72,7 +72,7 @@
 		<tr><td class='input'>Username:</td><td class='input'><input type='text' name='username' onfocus='clearThis(this)'></td></tr>
 		<tr><td class='input'>Password:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr></table>
 		<div class='action'>
-			<input type='submit' name='action' value='Login'/>
+			<input type='submit' name='action' value='Log in'/>
 		</div>
 		</form>";
 	}
