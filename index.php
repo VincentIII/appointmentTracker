@@ -18,6 +18,7 @@
 	$pageName = "index.php";
 	$defaultDisplay = FALSE;
 	$loginSuccess = FALSE;
+	$emailArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Hardware",4=>"Data Drive",5=>"Appointment Closed");
 	
 		//Used for Daylight Saving Time Adjustments
 	if (date("I", time()) == TRUE)
@@ -107,6 +108,7 @@
 	{
 		global $connection;
 		global $userName;
+		global $emailArray;
 		if (strpos($type, 'consultant') !== FALSE)
 		{
 			$query = "SELECT consultantUserName AS code, CONCAT_WS(', ', consultantLastName, consultantFirstName) AS name FROM consultants WHERE consultantActive = 1 ORDER BY consultantLastName ASC ";
@@ -138,8 +140,7 @@
 		if ($type == "emailType")
 		{
 			$dropDownExport = "<select name='emailType'>";
-			$sectArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Data Drive",4=>"Appointment Closed");
-			foreach ($sectArray as $key => $value)
+			foreach ($emailArray as $key => $value)
 			{
 				$dropDownExport .= "<option value='$key'>$value</option>\n";
 			}

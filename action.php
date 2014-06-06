@@ -364,13 +364,45 @@
 		global $connection;
 		global $rightNow;
 		global $userName;
-		print_r($_POST);
-		$additonalBody = trim(preg_replace('/ +/', ' ', preg_replace('/[^A-Za-z0-9 ]/', ' ', urldecode(html_entity_decode(strip_tags($_POST['additionalBody']))))));
-		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID'],$additionalBody);
+		global $emailArray;
+		//print_r($_POST);
+		//$additonalBody = trim(preg_replace('/ +/', ' ', preg_replace('/[^A-Za-z0-9 ]/', ' ', urldecode(html_entity_decode(strip_tags($_POST['additionalBody']))))));
+		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID']);
 		$email = $_POST['customerUserName']."@pitt.edu";
+			$emailArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Hardware",4=>"Data Drive",5=>"Appointment Closed");
+		if ($_POST['emailType'] == 0)
+		{
+			$subject = "Computer Drop-Off Information";
+		}
+		else if ($_POST['emailType'] == 1)
+		{
+			$subject = "Computer Needs your Assistance";
+		}
+		else if ($_POST['emailType'] == 2)
+		{
+			$subject = "Computer Ready for Pickup";
+		}
+		else if ($_POST['emailType'] == 3)
+		{
+			$subject = "Computer Status Update";
+		}
+		else if ($_POST['emailType'] == 4)
+		{
+			$subject = "Technology Services USB Data Drive";
+		}
+		else if ($_POST['emailType'] == 5)
+		{
+			$subject = "Computer Drop-Off Completion";
+		}
+		else {}
+		$subject .= " [Ticket #".$_POST["ticketNo"]."]";
 		$headers = "From: Student Computing Services <resnet@pitt.edu>\r\n" . "Reply-To: helpdesk@pitt.edu\r\n";
         $headers .= "Content-Type: text/plain; charset=ISO_8859-1\r\n";
-		if (@mail($email,$subject,$body,$headers))
+		echo $email."<br><br>";
+		echo $subject."<br><br>";
+		print $body."<br><br>";
+		echo $headers."<br><br>";
+		/*if (@mail($email,$subject,$body,$headers))
 		{
 			$messages .= "RESULT:Email Sent Successfully!::";
 			
@@ -378,19 +410,50 @@
 		else
 		{
 			$messages .= "ERROR:Sending Email Failed::";
-		}
+		}*/
 	}
 	
 	//Creates the body of an email for sending to a customer and for archive viewing
 	function emailBodyFunc($firstName,$type,$ticketNo,$instanceID)
 	{
-		$sectArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Data Drive",4=>"Appointment Closed");
-		if ($type == 0)
+		global $emailArray;
+		$message = "Dear $firstName,\n\n\n";
+		$time = "Monday | 8:30am - 6:00pm\nTuesday | 8:30am - 6:00pm\nWednesday | 8:30am - 8:30pm\nThursday | 8:30am - 6:00pm\nFriday | 8:30am - 5:00pm\nSaturday | 10:00am - 5:00pm\nSunday | 12:00pm - 4:00pm\n\n\n";
+		$footer = "Sincerely,\n\nTechnology Services\nUniversity of Pittsburgh\nComputing Services and Systems Development (CSSD)\n\ntechnology.pitt.edu\n412-624-HELP [4357]\n";
+		if ($type == 0)	//Checked In
 		{
-			
+			$message .= "";
 		}
-		else
+		else if ($type == 1) //Assistance Needed
 		{
+			$message .= "We currently working on your device and need your assistance to move forward with the repairs. When you come a Technical Consultant will review with you the work that has been and still needs to be done on your device.\n\nOur standard hours are as follows (please allow 30 minutes for assistance):\n";
+			$message .= $time;
+			$message .= "Any further questions can be answered by calling the Technology Helpdesk at 412-624-HELP (4357).\n\n";
 		}
+		else if ($type == 2) //Pick Up
+		{
+			$message .= "We have finished working on your device and it is ready to be picked up at the Technology Services Desk at the University Store on Fifth. When you come a Technical Consultant will review with you the work that has been done on your device.\n\nOur standard hours are as follows (please allow 30 minutes for check out procedures):\n";
+			$message .= $time;
+			$message .= "Any further questions can be answered by calling the Technology Helpdesk at 412-624-HELP (4357).\n\n";
+		}
+		else if ($type == 3) //Hardware
+		{
+			$message .= "While working on your device, it was determined that there are hardware issues present. Your device is ready to be picked up at the Technology Services Desk at the University Store on Fifth. When you arrive, a Technical Consultant will discuss options to have your computer repaired at the University Store Hardware Repair Center (please allow 30 minutes for this consultation).\n\nThe Technology Services Desk standard hours are as follows:\n";
+			$message .= $time;
+			$message .= "The University Store Hardware Repair Center hours are as follows:\nMonday | 9:30am - 5:30pm\nTuesday | 9:30am - 5:30pm\nWednesday | 11:30am - 7:30pm\nThursday | 9:30am - 5:30pm\nFriday | 11:00am - 4:30pm\n\nAny further questions can be answered by calling the Technology Helpdesk at 412-624-HELP (4357).\n\n";
+		}
+		else if ($type == 4) //Data Drive
+		{
+			$message .= "You are being contacted because our records indicate that the Technology Services Desk has lent you a USB data drive to back up your data.\n\nIf you need assistance transferring your data please feel free to stop by and we would be glad to help you out. If not, please return the USB data drive to the Technology Services Desk at the University Store on Fifth as soon as possible.\n\nOur standard hours are as follows:\n";
+			$message .= $time;
+			$message .= "If you have any further questions or if you believe this to be a mistake please call the Technology Helpdesk at 412-624-HELP (4357).\n\n";
+		}
+		else if ($type == 5) //Appointment Closed
+		{
+			$message .= "";
+		}
+		else{}
+		$message .= $footer;
+		return $message;
 	}
 ?>
