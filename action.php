@@ -398,10 +398,11 @@
 		$subject .= " [Ticket #".$_POST["ticketNo"]."]";
 		$headers = "From: Student Computing Services <resnet@pitt.edu>\r\n" . "Reply-To: helpdesk@pitt.edu\r\n";
         $headers .= "Content-Type: text/plain; charset=ISO_8859-1\r\n";
-		echo $email."<br><br>";
-		echo $subject."<br><br>";
-		print $body."<br><br>";
+		$htmlBody = str_replace("\n","<br>",$body);
 		echo $headers."<br><br>";
+		echo "To: ".$email."<br><br>";
+		echo $subject."<br><br>";
+		echo $htmlBody."<br><br>";
 		/*if (@mail($email,$subject,$body,$headers))
 		{
 			$messages .= "RESULT:Email Sent Successfully!::";
@@ -417,7 +418,7 @@
 	function emailBodyFunc($firstName,$type,$ticketNo,$instanceID)
 	{
 		global $emailArray;
-		$message = "Dear $firstName,\n\n\n";
+		$message = "Dear $firstName,\n\n";
 		$time = "Monday | 8:30am - 6:00pm\nTuesday | 8:30am - 6:00pm\nWednesday | 8:30am - 8:30pm\nThursday | 8:30am - 6:00pm\nFriday | 8:30am - 5:00pm\nSaturday | 10:00am - 5:00pm\nSunday | 12:00pm - 4:00pm\n\n\n";
 		$footer = "Sincerely,\n\nTechnology Services\nUniversity of Pittsburgh\nComputing Services and Systems Development (CSSD)\n\ntechnology.pitt.edu\n412-624-HELP [4357]\n";
 		if ($type == 0)	//Checked In

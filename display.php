@@ -251,7 +251,7 @@
 				<table><tr><td class='input'>Email Type</td><td cclass='input'>";
 		echo generateDropDowns("emailType");
 		echo "</td></tr>\n
-		<tr><td class='input'>Extra Comments</td><td class='input'><textarea rows='4' cols='18' name='additionalBody'></textarea></td></tr>\n
+		<tr><td class='input'>Private Comments</td><td class='input'><textarea rows='4' cols='18' name='additionalBody'></textarea></td></tr>\n
 		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Send Email'/></td></tr></table>
 		<input type='hidden' name='ticketNo' value='$ticketNo'>
 		<input type='hidden' name='instanceID' value='$instanceID'>
