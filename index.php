@@ -82,9 +82,7 @@
 					<title>Service Drop Off Form</title>
 					<link rel='stylesheet' type='text/css' href='css/reset.css'/>
 					<link rel='stylesheet' type='text/css' href='css/css.css'/>
-					<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
-					<script type='text/javascript' src='js/html2canvas.js'></script>
-					<script type='text/javascript' src='js/jquery.plugin.html2canvas.js'></script>";
+					<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>";
 		//JQuery/JavaScript for hiding popup messages and clearing pre-filled text boxes
 	?>
 		<script>
@@ -181,12 +179,7 @@
 		echo "</div>
 		<footer>
 			<div class='footLinks'>
-				<a href='$pageName'>[home]</a> <a href='$pageName?menu=create'>[create]</a> <a href='$pageName?menu=search'>[search]</a>";
-		if (verifySessions() == 2)
-		{
-			echo " <a href='$pageName?menu=emailer'>[email]</a>";
-		}
-			echo"</div>
+				<a href='$pageName'>[home]</a> <a href='$pageName?menu=create'>[create]</a> <a href='$pageName?menu=search'>[search]</a></div>
 			<div class='adminLinks'>";
 		if (verifySessions() == 0 && $loginSuccess == FALSE)
 		{
@@ -534,17 +527,6 @@
 			$defaultDisplay = TRUE;
 		}
 	}
-	else if ($fAction == "Search Email")
-	{
-		if (verifySessions() == 2)
-		{
-			emailSearchFunc();
-		}
-		else
-		{
-			$defaultDisplay = TRUE;
-		}
-	}
 	else if ($fAction == "Email Customer")
 	{
 		if (verifySessions() == 2)
@@ -560,11 +542,23 @@
 	{
 		if (verifySessions() == 2)
 		{
-			sendEmailFunc();
+			confirmEmailForm();
 		}
 		else
 		{
 			$defaultDisplay = TRUE;
+		}
+	}
+	else if ($fAction == "Confirm Email")
+	{
+		if (verifySessions() == 2)
+		{
+			sendEmailFunc();
+			emailInfoForm();
+		}
+		else
+		{
+			$defaulDisplay = TRUE;
 		}
 	}
 	else

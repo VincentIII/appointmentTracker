@@ -366,10 +366,8 @@
 		global $userName;
 		global $emailArray;
 		//print_r($_POST);
-		//$additonalBody = trim(preg_replace('/ +/', ' ', preg_replace('/[^A-Za-z0-9 ]/', ' ', urldecode(html_entity_decode(strip_tags($_POST['additionalBody']))))));
 		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID']);
 		$email = $_POST['customerUserName']."@pitt.edu";
-			$emailArray = array(0=>"Checked In",1=>"Assistance Needed",2=>"Pick Up",3=>"Hardware",4=>"Data Drive",5=>"Appointment Closed");
 		if ($_POST['emailType'] == 0)
 		{
 			$subject = "Computer Drop-Off Information";
@@ -398,15 +396,15 @@
 		$subject .= " [Ticket #".$_POST["ticketNo"]."]";
 		$headers = "From: Student Computing Services <resnet@pitt.edu>\r\n" . "Reply-To: helpdesk@pitt.edu\r\n";
         $headers .= "Content-Type: text/plain; charset=ISO_8859-1\r\n";
-		$htmlBody = str_replace("\n","<br>",$body);
-		echo $headers."<br><br>";
-		echo "To: ".$email."<br><br>";
-		echo $subject."<br><br>";
-		echo $htmlBody."<br><br>";
 		/*if (@mail($email,$subject,$body,$headers))
 		{
-			$messages .= "RESULT:Email Sent Successfully!::";
-			
+			$messages .= "RESULT:Email Sent Successfully!::";*/
+			$query = "INSERT INTO emails(ticketNo,instanceID,emailType,staffSent,dateSent) VALUES (?,?,?,?,?)";
+			$stmt = $connection->prepare($query);
+			$stmt->bind_param("iiiss",$_POST['ticketNo'],$_POST['instanceID'],$_POST['emailType'],$userName,$rightNow);
+			$stmt->execute();
+			$stmt->store_result();
+		/*	
 		}
 		else
 		{

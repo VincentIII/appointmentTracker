@@ -213,6 +213,10 @@ td.input
 {
 	width:150px;
 }
+td.emailDisplay
+{
+	width:400px;
+}
 td.text
 {
 	padding: 5px 2px;

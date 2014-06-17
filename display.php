@@ -219,51 +219,90 @@
 		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Search Sheets'/></td></tr></table></form>\n";
 	}
 	
-	//Displays form for searching emails
-	function emailSearchForm()
-	{
-		global $pageName;
-		echo "<div class='subhead'>Email Search</div>
-				<form action='$pageName' id='searchForm' method='post'>
-				<table><tr><td class='input'>Employee</td><td cclass='input'>";
-		echo generateDropDowns("consultantSearch");
-		echo "</td></tr>\n
-		<tr><td class='input'>Timespan</td><td class='input'><input type='date' name='startDate'></td><td class='input'><input type='date' name='endDate'></td></td></tr>\n
-		<tr><td class='input'>Ticket Number</td><td class='input'><input type='text' name='ticketNumber'></td></tr>\n
-		<tr><td class='input'>Customer Username</td><td class='input'><input type='text' name='customerUserName'></td></tr>\n
-		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Search Email'/></td></tr></table></form>\n";
-	}
-	
 	//Displays info page that allows for emailer to send emails and see what has been previously sent
 	function emailInfoForm()
 	{
 		global $connection;
 		global $pageName;
+		global $emailArray;
 		$ticketNo = $_POST["ticketNo"];
 		$instanceID = $_POST["instanceID"];
 		$customerUserName = $_POST["customerUserName"];
 		$customerFirstName = $_POST["customerFirstName"];
-		$customerLastName = $_POST["customerLastName"];
-			//Don't Create until 'Emails' have been sent
 		echo "<div class='subhead'>Previous Emails</div>";
+		$query = "SELECT emailType,staffSent,dateSent FROM checkout.emails WHERE ticketNo=? AND instanceID=?";
+		if ($stmt = $connection->prepare($query))
+		{
+			$stmt->bind_param("ii",$ticketNo,$instanceID);
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($emailType,$staffSent,$dateSent);
+			echo "<table><tr><td>Type</td><td>Staff</td><td>Date</td></tr>";
+			while ($stmt->fetch())
+			{
+				$emailType = $emailArray[$emailType];
+				echo "<tr><td>$emailType</td><td>$staffSent</td><td>$dateSent</td></tr>";
+			}
+			echo "</table>";
+		}
 		echo "<div class='subhead'>Send Email</div>
 		<form action='$pageName' id='emailForm' method='post'>
 				<table><tr><td class='input'>Email Type</td><td cclass='input'>";
 		echo generateDropDowns("emailType");
 		echo "</td></tr>\n
-		<tr><td class='input'>Private Comments</td><td class='input'><textarea rows='4' cols='18' name='additionalBody'></textarea></td></tr>\n
 		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Send Email'/></td></tr></table>
 		<input type='hidden' name='ticketNo' value='$ticketNo'>
 		<input type='hidden' name='instanceID' value='$instanceID'>
 		<input type='hidden' name='customerUserName' value='$customerUserName'>
-		<input type='hidden' name='customerFirstName' value='$customerFirstName'>
-		<input type='hidden' name='customerLastName' value='$customerLastName'></form>\n";
+		<input type='hidden' name='customerFirstName' value='$customerFirstName'></form>\n";
 	}
 	
-	//Displays a 'copy' of what a past email looked like
-	function emailDisplayForm()
+	//Displays a copy of what the current email to be sent looks like
+	function confirmEmailForm()
 	{
-		global $connection;
+		global $rightNow;
+		global $userName;
+		global $emailArray;
 		global $pageName;
+		echo "<div class='subhead'>Confirm Email</div>";
+		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID']);
+		$email = $_POST['customerUserName']."@pitt.edu";
+		if ($_POST['emailType'] == 0)
+		{
+			$subject = "Computer Drop-Off Information";
+		}
+		else if ($_POST['emailType'] == 1)
+		{
+			$subject = "Computer Needs your Assistance";
+		}
+		else if ($_POST['emailType'] == 2)
+		{
+			$subject = "Computer Ready for Pickup";
+		}
+		else if ($_POST['emailType'] == 3)
+		{
+			$subject = "Computer Status Update";
+		}
+		else if ($_POST['emailType'] == 4)
+		{
+			$subject = "Technology Services USB Data Drive";
+		}
+		else if ($_POST['emailType'] == 5)
+		{
+			$subject = "Computer Drop-Off Completion";
+		}
+		else {}
+		$subject .= " [Ticket #".$_POST["ticketNo"]."]";
+		echo "<form action='$pageName' id='emailForm' method='post'><table>
+		<tr><td class='input'>To:</td><td class='emailDisplay'><input type='text' value='$email' size=100 disabled></td></tr>\n
+		<tr><td class='input'>Subject:</td><td class='emailDisplay'><input type='text' value='$subject' size=100 disabled></td></tr>\n
+		<tr><td class='input'>Body:</td><td class='emailDisplay'><textarea cols=75 rows=20 disabled>$body</textarea></td></tr>\n
+		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Confirm Email'/>
+		<input type='hidden' name='ticketNo' value=".$_POST['ticketNo'].">
+		<input type='hidden' name='instanceID' value=".$_POST['instanceID'].">
+		<input type='hidden' name='customerUserName' value=".$_POST['customerUserName'].">
+		<input type='hidden' name='customerFirstName' value=".$_POST['customerFirstName'].">
+		<input type='hidden' name='emailType' value=".$_POST['emailType'].">
+		</td></tr></table></form>";
 	}
 ?>
