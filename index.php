@@ -80,9 +80,11 @@
 				<head>
 					<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
 					<title>Service Drop Off Form</title>
-					<link rel='stylesheet' type='text/css' href='reset.css'/>
-					<link rel='stylesheet' type='text/css' href='css.css'/>
-					<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>";
+					<link rel='stylesheet' type='text/css' href='css/reset.css'/>
+					<link rel='stylesheet' type='text/css' href='css/css.css'/>
+					<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+					<script type='text/javascript' src='js/html2canvas.js'></script>
+					<script type='text/javascript' src='js/jquery.plugin.html2canvas.js'></script>";
 		//JQuery/JavaScript for hiding popup messages and clearing pre-filled text boxes
 	?>
 		<script>
