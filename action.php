@@ -365,12 +365,15 @@
 		global $rightNow;
 		global $userName;
 		global $emailArray;
+		$sendEmail = TRUE;
+		$fileUploadBool = FALSE;
 		//print_r($_POST);
 		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID']);
 		$email = $_POST['customerUserName']."@pitt.edu";
 		if ($_POST['emailType'] == 0)
 		{
 			$subject = "Computer Drop-Off Information";
+			$fileUploadBool = TRUE;
 		}
 		else if ($_POST['emailType'] == 1)
 		{
@@ -391,25 +394,42 @@
 		else if ($_POST['emailType'] == 5)
 		{
 			$subject = "Computer Drop-Off Completion";
+			$fileUploadBool = TRUE;
 		}
 		else {}
 		$subject .= " [Ticket #".$_POST["ticketNo"]."]";
 		$headers = "From: Student Computing Services <resnet@pitt.edu>\r\n" . "Reply-To: helpdesk@pitt.edu\r\n";
         $headers .= "Content-Type: text/plain; charset=ISO_8859-1\r\n";
-		/*if (@mail($email,$subject,$body,$headers))
+		if ($fileUploadBool == TRUE)
 		{
-			$messages .= "RESULT:Email Sent Successfully!::";*/
-			$query = "INSERT INTO emails(ticketNo,instanceID,emailType,staffSent,dateSent) VALUES (?,?,?,?,?)";
-			$stmt = $connection->prepare($query);
-			$stmt->bind_param("iiiss",$_POST['ticketNo'],$_POST['instanceID'],$_POST['emailType'],$userName,$rightNow);
-			$stmt->execute();
-			$stmt->store_result();
-		/*	
+			if ($_FILES["file"]["type"] != "application/pdf" || $_FILES["file"]["name"] != "Ticket ".$_POST["ticketNo"])
+			{
+				$messages .= "ERROR:Incorrect File Attached.  Try Again::";
+				$sendEmail = FALSE;
+			}
+			else
+			{
+				$attachment = chunk_split(base64_encode(file_get_contents($_FILES['file']['tmp_name'])));
+				$filename = $_FILES['file']['name'];
+			}
 		}
-		else
+		if ($sendEmail = TRUE)
 		{
-			$messages .= "ERROR:Sending Email Failed::";
-		}*/
+			/*if (@mail($email,$subject,$body,$headers))
+			{
+				$messages .= "RESULT:Email Sent Successfully!::";*/
+				$query = "INSERT INTO emails(ticketNo,instanceID,emailType,staffSent,dateSent) VALUES (?,?,?,?,?)";
+				$stmt = $connection->prepare($query);
+				$stmt->bind_param("iiiss",$_POST['ticketNo'],$_POST['instanceID'],$_POST['emailType'],$userName,$rightNow);
+				$stmt->execute();
+				$stmt->store_result();
+			/*	
+			}
+			else
+			{
+				$messages .= "ERROR:Sending Email Failed::";
+			}*/
+		}
 	}
 	
 	//Creates the body of an email for sending to a customer and for archive viewing
@@ -421,7 +441,7 @@
 		$footer = "Sincerely,\n\nTechnology Services\nUniversity of Pittsburgh\nComputing Services and Systems Development (CSSD)\n\ntechnology.pitt.edu\n412-624-HELP [4357]\n";
 		if ($type == 0)	//Checked In
 		{
-			$message .= "";
+			$message .= "This email is confirming that you have dropped your computer off at the Technology Services Desk at the University Store on Fifth.  Attached is a copy of the contract stating the legal terms of the service as well as any information we have recorded about this appointment.\n\nIf any information looks incorrect or you have further questions, contact the Technology Helpdesk at 412-624-HELP (4357).\n\n";
 		}
 		else if ($type == 1) //Assistance Needed
 		{
@@ -449,7 +469,7 @@
 		}
 		else if ($type == 5) //Appointment Closed
 		{
-			$message .= "";
+			$message .= "This email is confirming that you have received your computer from at the Technology Services Desk at the University Store on Fifth.  Attached is a copy of the contract stating the legal terms of the service as well as any information we have recorded about this appointment.\n\nIf any information looks incorrect or you have further questions, contact the Technology Helpdesk at 412-624-HELP (4357).\n\n";
 		}
 		else{}
 		$message .= $footer;

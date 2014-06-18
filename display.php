@@ -204,6 +204,90 @@
 		}
 	}
 	
+	
+	//Displays a printable copy of the form
+	function printForm($ticket)
+	{
+		global $connection;
+		global $instanceID;
+		global $pageName;
+		global $userName;
+			//If $instanceID is set from Post or Get variables, then use different query
+		if (isNullOrEmptyString($instanceID))
+		{
+			$query = "SELECT ticketNo,customerFirstName,customerLastName,customerFirstNamePickUp,customerLastNamePickUp,customerDropOff,customerPickUp,consultantDropOff,consultantPickUp,staffDropOff,staffPickUp,customerUserName,computerMake,computerModel,computerSerialNum,powerCableQuantity,powerCableDesc,mediaQuantity,mediaDesc,otherQuantity,otherDesc,warrantyStatus,cssdDriveOut,altUserName,altFirstName,altLastName,topCondition,bottomCondition,screenCondition,keyboardCondition FROM sheets WHERE ticketNo = ? AND instanceID = '0'";
+		}
+		else
+		{
+			$query = "SELECT ticketNo,customerFirstName,customerLastName,customerFirstNamePickUp,customerLastNamePickUp,customerDropOff,customerPickUp,consultantDropOff,consultantPickUp,staffDropOff,staffPickUp,customerUserName,computerMake,computerModel,computerSerialNum,powerCableQuantity,powerCableDesc,mediaQuantity,mediaDesc,otherQuantity,otherDesc,warrantyStatus,cssdDriveOut,altUserName,altFirstName,altLastName,topCondition,bottomCondition,screenCondition,keyboardCondition FROM sheets WHERE ticketNo = ? AND instanceID = ?";
+		}
+		if ($stmt = $connection->prepare($query))
+		{
+			if (isNullOrEmptyString($instanceID))
+			{
+				$stmt->bind_param("i",$ticket);
+			}
+			else
+			{
+				$stmt->bind_param("ii",$ticket,$instanceID);
+			}
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($ticketNo,$customerFirstName,$customerLastName,$customerFirstNamePickUp,$customerLastNamePickUp,$customerDropOff,$customerPickUp,$consultantDropOff,$consultantPickUp,$staffDropOff,$staffPickUp,$customerUserName,$computerMake,$computerModel,$computerSerialNum,$powerCableQuantity,$powerCableDesc,$mediaQuantity,$mediaDesc,$otherQuantity,$otherDesc,$warrantyStatus,$cssdDriveOut,$altUserName,$altFirstName,$altLastName,$topCondition,$bottomCondition,$screenCondition,$keyboardCondition);
+			while ($stmt->fetch())
+			{
+				$_POST["consultantDropOff"] = $consultantDropOff;
+				$_POST["staffDropOff"] = $staffDropOff;
+				echo"<div class='section1'>
+						<div class='subhead'>Drop Off</div>
+						<table><tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstName' disabled></td><td class='input'><input type='text' value='$customerLastName' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerDropOff' disabled></td></tr>
+						<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantDropOff' disabled>
+					</td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffDropOff' disabled></td></tr>
+						<tr><td colspan='5' class='text'>In the situation I am unable to pick up my computer, I give permission for the following to pick up my computer:</td></tr>
+						<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$altFirstName' disabled></td><td class='input'><input type='text' value='$altLastName' disabled></td><td>Username:</td><td class='input'><input type='text' value='$altUserName' disabled></td></tr></table>
+					</div>
+					<div class='section2'><input type='hidden' name='closedForm' value='TRUE'>
+							<div class='subhead'>Pick Up</div>
+							<table><tr><td colspan='5' class='text'>I agree that I received the items left with CSSD in good condition</td></tr>
+							<tr><td class='input'>Customer Name: </td><td class='input'><input type='text' value='$customerFirstNamePickUp' disabled></td><td class='input'><input type='text' value='$customerLastNamePickUp' disabled></td><td class='input'>Signature: </td><td class='input'><input type='text' value='$customerPickUp' disabled></td></tr>
+							<tr><td class='input'>Consultant: </td><td class='input'><input type='text' value='$consultantPickUp' disabled></td><td></td><td class='input'>Staff: </td><td class='input'><input type='text' value='$staffPickUp' disabled></td></tr></table>
+						</div>
+					<div class='section3'>
+					<div class='subhead'>Departmental Information</div>
+					<table><tr><td class='input'>Username: </td><td><input type='text' value='$customerUserName' disabled></td><td class='input'></td><td class='input'>Ticket Number: </td><td class='input'><input type='text' value='$ticketNo' disabled><input type='hidden' name='ticketNo' value='$ticketNo'><input type='hidden' name='instanceID' value='$instanceID'></td></tr>
+					<tr><td class='input'>Computer: </td><td class='input'><input type='text' value='$computerMake' disabled></td><td class='input'><input type='text' value='$computerModel' disabled></td><td class='input'>Serial Number: </td><td class='input'><input type='text' value='$computerSerialNum' disabled></td></tr></table><br/>
+					<table><tr><td class='input'>Cable Quantity: </td><td class='input'><input type='text' name='powerCableQuantity' value='$powerCableQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='powerCableDesc' value='$powerCableDesc'></td></tr>
+					<tr><td class='input'>Drive/Discs Quantity: </td><td class='input'><input type='text' name='mediaQuantity' value='$mediaQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='mediaDesc' value='$mediaDesc'></td></tr>
+					<tr><td class='input'>Other Quantity: </td><td class='input'><input type='text' name='otherQuantity' value='$otherQuantity'></td><td class='input'>Description: </td><td class='input'><input type='text' name='otherDesc'  value='$otherDesc'></td></tr>
+					<tr><td colspan='2'>Is the computer under warranty? </td>";
+					if ($warrantyStatus == 2)
+					{
+						echo"<td colspan='2'><input type='radio' name='warrantyStatus' value='2' checked>Yes <input type='radio' name='warrantyStatus' value='1'>No <input type='radio' name='warrantyStatus' value='0'>Not Sure</td></tr>";
+					}
+					else if ($warrantyStatus == 1)
+					{
+						echo"<td colspan='2'><input type='radio' name='warrantyStatus' value='2'>Yes <input type='radio' name='warrantyStatus' value='1' checked>No <input type='radio' name='warrantyStatus' value='0'>Not Sure</td></tr>";
+					}
+					else
+					{
+						echo"<td colspan='2'><input type='radio' name='warrantyStatus' value='2'>Yes <input type='radio' name='warrantyStatus' value='1'>No <input type='radio' name='warrantyStatus' value='0' checked>Not Sure</td></tr>";
+					}
+					echo"<tr><td colspan='2'>Is the data backed up on CSSD data drive?</td>";
+					if ($cssdDriveOut == 1)
+					{
+						echo "<td colspan='2'><input type='radio' name='cssdDriveOut' value='1' checked>Yes <input type='radio' name='cssdDriveOut' value='0'>No</td></tr></table><br/>";
+					}
+					else
+					{
+						echo "<td colspan='2'><input type='radio' name='cssdDriveOut' value='1'>Yes <input type='radio' name='cssdDriveOut' value='0' checked>No</td></tr></table><br/>";
+					}
+					echo"<table><tr><td>Top Condition</td><td>Bottom Condition</td><td>Screen Condition</td><td>Keyboard Condition</td></tr>
+					<tr><td><textarea rows='3' cols='30' name='topCondition'>$topCondition</textarea></td><td><textarea rows='3' cols='30' name='bottomCondition'>$bottomCondition</textarea></td><td><textarea rows='3' cols='30' name='screenCondition'>$screenCondition</textarea></td><td><textarea rows='3' cols='30' name='keyboardCondition'>$keyboardCondition</textarea></td></tr></table>
+				</div>";
+			}
+		}
+	}
+	
 	//Displays form for searching check-ins
 	function searchForm()
 	{
@@ -264,12 +348,14 @@
 		global $userName;
 		global $emailArray;
 		global $pageName;
+		$fileUploadBool = FALSE;
 		echo "<div class='subhead'>Confirm Email</div>";
 		$body = emailBodyFunc($_POST['customerFirstName'],$_POST['emailType'],$_POST['ticketNo'],$_POST['instanceID']);
 		$email = $_POST['customerUserName']."@pitt.edu";
 		if ($_POST['emailType'] == 0)
 		{
 			$subject = "Computer Drop-Off Information";
+			$fileUploadBool = TRUE;
 		}
 		else if ($_POST['emailType'] == 1)
 		{
@@ -290,14 +376,27 @@
 		else if ($_POST['emailType'] == 5)
 		{
 			$subject = "Computer Drop-Off Completion";
+			$fileUploadBool = TRUE;
 		}
 		else {}
 		$subject .= " [Ticket #".$_POST["ticketNo"]."]";
-		echo "<form action='$pageName' id='emailForm' method='post'><table>
+		if ($fileUploadBool == TRUE)
+		{
+			echo"<form action='$pageName' id='emailForm' method='post' enctype='multipart/form-data'>";
+		}
+		else
+		{
+			echo"<form action='$pageName' id='emailForm' method='post'>";
+		}
+		echo"<table>
 		<tr><td class='input'>To:</td><td class='emailDisplay'><input type='text' value='$email' size=100 disabled></td></tr>\n
 		<tr><td class='input'>Subject:</td><td class='emailDisplay'><input type='text' value='$subject' size=100 disabled></td></tr>\n
-		<tr><td class='input'>Body:</td><td class='emailDisplay'><textarea cols=75 rows=20 disabled>$body</textarea></td></tr>\n
-		<tr><td colspan='2' class='input'><input type='submit' name='action' value='Confirm Email'/>
+		<tr><td class='input'>Body:</td><td class='emailDisplay'><textarea cols=75 rows=20 disabled>$body</textarea></td></tr>\n";
+		if ($fileUploadBool == TRUE)
+		{
+			echo"<tr><td class='input'>Info Sheet:</td><td class='emailDisplay'><input type='file' name='infoSheet'><a href='$pageName?menu=print&ticket=".$_POST["ticketNo"]."&instance=".$_POST["instanceID"]."' class='fakeButton' target='_blank'>[Load Sheet]</a></td></tr>\n";
+		}
+		echo"<tr><td colspan='2' class='input'><input type='submit' name='action' value='Confirm Email'/>
 		<input type='hidden' name='ticketNo' value=".$_POST['ticketNo'].">
 		<input type='hidden' name='instanceID' value=".$_POST['instanceID'].">
 		<input type='hidden' name='customerUserName' value=".$_POST['customerUserName'].">

@@ -14,6 +14,7 @@
 	}
 	$messages = "";
 	$break = FALSE;
+	$displayFooter = TRUE;
 	$instanceID = "";
 	$pageName = "index.php";
 	$defaultDisplay = FALSE;
@@ -76,11 +77,19 @@
 	//Display HTML Header
 	function displayHead()
 	{
+		global $fAction;
 		echo "<!DOCTYPE html>
 				<head>
-					<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-					<title>Service Drop Off Form</title>
-					<link rel='stylesheet' type='text/css' href='css/reset.css'/>
+					<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />";
+		if ($fAction == "print" && !empty($_GET["ticket"]))
+		{
+			echo "<title>Ticket ".$_GET["ticket"]."</title>";
+		}
+		else
+		{
+			echo "<title>Service Drop Off Form</title>";
+		}
+		echo"<link rel='stylesheet' type='text/css' href='css/reset.css'/>
 					<link rel='stylesheet' type='text/css' href='css/css.css'/>
 					<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>";
 		//JQuery/JavaScript for hiding popup messages and clearing pre-filled text boxes
@@ -561,6 +570,26 @@
 			$defaulDisplay = TRUE;
 		}
 	}
+	else if ($fAction == "print")
+	{
+		if (verifySessions() == 2)
+		{
+			if (!empty($_GET["ticket"]))
+			{
+				displayLegal();
+				printForm($_GET["ticket"]);
+				$displayFooter = FALSE;
+			}
+			else
+			{
+				$defaultDisplay = TRUE;
+			}
+		}
+		else
+		{
+			$defaultDisplay = TRUE;
+		}
+	}
 	else
 	{
 		$defaultDisplay = TRUE;
@@ -575,5 +604,8 @@
 		displayRecent(0);
 	}
 	displayMessages();
-	displayFooter();
+	if ($displayFooter == TRUE)
+	{
+		displayFooter();
+	}
 ?>
