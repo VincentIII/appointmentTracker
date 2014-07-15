@@ -1,13 +1,13 @@
 <?php
 	//Form used to set passcodes for the first time
-	function passwordForm()
+	function passcodeForm()
 	{
 		global $pageName;
 		echo "<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
-		<div class='subhead'>Reset Password</div><table>
-		<tr><td class='input'>Old Password:</td><td class='input'><input type='password' name='oldPassword'></td></tr>
-		<tr><td class='input'>New Password:</td><td class='input'><input type='password' name='newPassword1'></td></tr>
-		<tr><td class='input'>Confirm Password:</td><td class='input'><input type='password' name='newPassword2'></td></tr>
+		<div class='subhead'>Reset Passcode</div><table>
+		<tr><td class='input'>Old Passcode:</td><td class='input'><input type='password' name='oldPassword'></td></tr>
+		<tr><td class='input'>New Passcode:</td><td class='input'><input type='password' name='newPassword1'></td></tr>
+		<tr><td class='input'>Confirm Passcode:</td><td class='input'><input type='password' name='newPassword2'></td></tr>
 		</table>
 		<div class='action'>
 			<input type='submit' name='action' value='Reset'/>
@@ -16,7 +16,7 @@
 	}
 	
 	//Resets password after running two verifications on identity and correct password selection
-	function passwordFunc()
+	function passcodeFunc()
 	{
 		global $connection;
 		global $messages;
@@ -45,7 +45,7 @@
 					$stmt2->bind_param("ss",$hash,$_SESSION["USER"]);
 					$stmt2->execute();
 					$stmt2->store_result();
-					$messages .= "RESULT:Password Resetted Successfully::";
+					$messages .= "RESULT:Passcode Resetted Successfully::";
 				}
 				else
 				{
@@ -54,12 +54,12 @@
 			}
 			else
 			{
-				$messages .= "ERROR:Old password did not match on in database.  Try Again::";
+				$messages .= "ERROR:Old passcode did not match on in database.  Try Again::";
 			}
 		}
 		else
 		{
-			$messages .= "ERROR:New Passwords did not match. Try again::";
+			$messages .= "ERROR:New Passcode did not match. Try again::";
 		}
 	}
 	
@@ -70,7 +70,7 @@
 		echo "<form action='$pageName' id='submitForm' method='post' autocomplete='off'>
 		<div class='subhead'>Log In</div><table>
 		<tr><td class='input'>Username:</td><td class='input'><input type='text' name='username' onfocus='clearThis(this)'></td></tr>
-		<tr><td class='input'>Password:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr></table>
+		<tr><td class='input'>Passcode:</td><td class='input'><input type='password' name='password' onfocus='clearThis(this)'></td></tr></table>
 		<div class='action'>
 			<input type='submit' name='action' value='Log in'/>
 		</div>

@@ -108,7 +108,7 @@
 	<?php
 		echo "</head>
 				<body>
-				<header>TechRow Check-In</header>
+				<header>Technical Support Check-In</header>
 					<div class='body'>\n";
 	}
 	
@@ -196,7 +196,7 @@
 		}
 		else
 		{
-			echo"<a href='$pageName?menu=password'>[reset password]</a> <a href='$pageName?menu=logout'>[logout]</a>";
+			echo"<a href='$pageName?menu=passcode'>[reset passcode]</a> <a href='$pageName?menu=logout'>[logout]</a>";
 		}
 		echo"</div>
 		</footer>
@@ -506,11 +506,11 @@
 		}
 		$defaultDisplay = TRUE;
 	}
-	else if ($fAction == "password")
+	else if ($fAction == "passcode")
 	{
 		if (verifySessions() != 0)
 		{
-			passwordForm();
+			passcodeForm();
 		}
 		else
 		{
@@ -521,9 +521,9 @@
 	{
 		if (verifySessions() != 0)
 		{
-			passwordFunc();
+			passcodeFunc();
 		}
-		passwordForm();
+		passcodeForm();
 	}
 	else if ($fAction == "emailer")
 	{
